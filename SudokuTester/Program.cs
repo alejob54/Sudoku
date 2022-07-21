@@ -29,14 +29,8 @@ namespace SudokuTester
 
         static void TestGenerateRandomSudoku()
         {
-            var start = DateTime.UtcNow;
             Sudoku sudoku = new Sudoku();
             var result = sudoku.GenerateRandom();
-
-            var end = DateTime.UtcNow;
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Found in " + (end.Subtract(start).TotalMinutes));
-            sudoku.PrintMatrix(result);
         }
     }
 }
