@@ -18,7 +18,7 @@ namespace SudokuWebMVC.Helpers
             while (true)
             {
                 matrix = new SudokuGenerator().LoadRandom(Method);
-                isValid = Validate(matrix);
+                isValid = new SudokuValidations().MatrixIsDone(matrix);
 
                 if (isValid)
                 {
@@ -49,31 +49,6 @@ namespace SudokuWebMVC.Helpers
                 Directory.CreateDirectory(@"C:/sudoku/");
             }
             File.WriteAllText(@"C:/sudoku/" + Guid.NewGuid() + ".txt", sb.ToString());
-        }
-
-        public bool Validate(int[,] matrix)
-        {
-            if (matrix is null)
-            {
-                throw new ArgumentNullException(nameof(matrix));
-            }
-
-            // set all validations in single line after testing.
-            if (new SudokuValidations().ValidateBySum(matrix))
-            {
-                //validate all rows and columns
-                if (new SudokuValidations().ValidateRowsAndColumns(matrix))
-                {
-                    if (new SudokuValidations().ValidateAllInnerMatrix(matrix))
-                    {
-                        return true;
-                    }
-                    else return false;
-                }
-                else return false;
-
-            }
-            else return false;
         }
 
         public SudokuGrid ShowHint(int?[,] array)
@@ -140,7 +115,7 @@ namespace SudokuWebMVC.Helpers
             }
             int MaxAttempts = (9*8*7*6*5*4*3*2*1);
             int CurrentLastAttempt = 0;
-            while (!MatrixIsDone(FinalMatrix))
+            while (!new SudokuValidations().MatrixIsDone(FinalMatrix))
             {
                 if (CurrentLastAttempt > MaxAttempts)
                 {
@@ -169,22 +144,6 @@ namespace SudokuWebMVC.Helpers
             }
 
             return FinalMatrix;
-        }
-
-        public bool MatrixIsDone(int[,] matrix)
-        {
-            if (matrix is null)
-            {
-                throw new ArgumentNullException(nameof(matrix));
-            }
-
-            if (new SudokuValidations().ValidateBySum(matrix) && 
-                new SudokuValidations().ValidateRowsAndColumns(matrix) && 
-                new SudokuValidations().ValidateAllInnerMatrix(matrix))
-            {
-                return true;
-            }
-            else return false;
         }
 
         public bool ValidateTemporalAdding(int[,] matrix)
@@ -303,11 +262,11 @@ namespace SudokuWebMVC.Helpers
                 if (i == 3 || i == 6 || i == 9)
                 {
                     y = 0;
-                    x = x + 3;
+                    x += 3;
                 }
                 var matx = MatrixToSmallMatrix(matrix, x, x + 2, y, y + 2);
                 if (!ValidateInnerMatrix(matx)) return false;
-                y = y + 3;
+                y += 3;
 
             }
 
@@ -420,6 +379,69 @@ namespace SudokuWebMVC.Helpers
             return !result.Where(a => a.key != 0 && a.val > 1).Any();
         }
 
+        public bool MatrixIsDone(int[,] matrix)
+        {
+            if (matrix is null)
+            {
+                throw new ArgumentNullException(nameof(matrix));
+            }
+
+            if (new SudokuValidations().ValidateBySum(matrix) &&
+                new SudokuValidations().ValidateRowsAndColumns(matrix) &&
+                new SudokuValidations().ValidateAllInnerMatrix(matrix))
+            {
+                return true;
+            }
+            else return false;
+        }
+
+    }
+
+    public class SudokuValidator
+    {
+        public void ValidateFolder(string path, bool deleteInvalidFiles = false)
+        {
+            var files = Directory.GetFiles(path);
+            int i = 1;
+            foreach (var item in files)
+            {
+                int[,] Matrix = ConvertFileToMatrix(File.ReadAllLines(item));
+                bool IsValid = new SudokuValidations().MatrixIsDone(Matrix);
+                if (IsValid)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"{i} - {item} is valid");
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"{i} - {item} is invalid");
+
+                    if (deleteInvalidFiles)
+                    {
+                        File.Delete(item);
+                    }
+                }
+                i++;
+            }
+        }
+
+        private int[,] ConvertFileToMatrix(string[] content)
+        {
+            int[,] matrix = new int[9, 9];
+            int x = 0;
+
+            foreach (string item in content)
+            {
+                for (int y = 0; y < 9; y++)
+                {
+                    matrix[x, y] = Convert.ToInt32(item[y].ToString());
+                }
+                x++;
+            }
+
+            return matrix;
+        }
     }
 
     public class SudokuGrid
