@@ -1,4 +1,15 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿const OnEvent = (doc) => {
+    return {
+        on: (type, selector, callback) => {
+            doc.addEventListener(type, (event) => {
+                if (!event.target.matches(selector)) return;
+                callback.call(event.target, event);
+            }, false);
+        }
+    }
+};
 
-// Write your JavaScript code.
+
+OnEvent(document).on('click', 'td', function (e) {
+    alert(e.target.id);
+});
