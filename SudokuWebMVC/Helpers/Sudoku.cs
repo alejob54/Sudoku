@@ -9,13 +9,7 @@ namespace SudokuWebMVC.Helpers
     public class Sudoku
     {
 
-        public int[,] Generate()
-        {
-            var matrix = LoadValidBoard();
-            return Validate(matrix) ? matrix : default;
-        }
-
-        public void GenerateRandom()
+        public void GenerateRandom(int Method)
         {
             int[,] matrix = new int[9, 9];
             bool isValid = false;
@@ -23,7 +17,7 @@ namespace SudokuWebMVC.Helpers
 
             while (true)
             {
-                matrix = new SudokuGenerator().LoadRandom();
+                matrix = new SudokuGenerator().LoadRandom(Method);
                 isValid = Validate(matrix);
 
                 if (isValid)
@@ -50,7 +44,10 @@ namespace SudokuWebMVC.Helpers
                 }
                 sb.AppendLine();
             }
-
+            if (!Directory.Exists(@"C:/sudoku/"))
+            {
+                Directory.CreateDirectory(@"C:/sudoku/");
+            }
             File.WriteAllText(@"C:/sudoku/" + Guid.NewGuid() + ".txt", sb.ToString());
         }
 
@@ -105,103 +102,6 @@ namespace SudokuWebMVC.Helpers
             return EmptySquares[RandomPosition];
         }
 
-        private int[,] LoadValidBoard()
-        {
-
-            var result = new int[9, 9];
-            result[0, 0] = 5;
-            result[0, 1] = 8;
-            result[0, 2] = 3;
-            result[0, 3] = 1;
-            result[0, 4] = 6;
-            result[0, 5] = 4;
-            result[0, 6] = 9;
-            result[0, 7] = 7;
-            result[0, 8] = 2;
-
-            result[1, 0] = 7;
-            result[1, 1] = 2;
-            result[1, 2] = 9;
-            result[1, 3] = 3;
-            result[1, 4] = 5;
-            result[1, 5] = 8;
-            result[1, 6] = 1;
-            result[1, 7] = 4;
-            result[1, 8] = 6;
-
-            result[2, 0] = 1;
-            result[2, 1] = 4;
-            result[2, 2] = 6;
-            result[2, 3] = 2;
-            result[2, 4] = 7;
-            result[2, 5] = 9;
-            result[2, 6] = 3;
-            result[2, 7] = 8;
-            result[2, 8] = 5;
-
-            result[3, 0] = 8;
-            result[3, 1] = 5;
-            result[3, 2] = 2;
-            result[3, 3] = 6;
-            result[3, 4] = 9;
-            result[3, 5] = 1;
-            result[3, 6] = 4;
-            result[3, 7] = 3;
-            result[3, 8] = 7;
-
-            result[4, 0] = 3;
-            result[4, 1] = 1;
-            result[4, 2] = 7;
-            result[4, 3] = 4;
-            result[4, 4] = 2;
-            result[4, 5] = 5;
-            result[4, 6] = 8;
-            result[4, 7] = 6;
-            result[4, 8] = 9;
-
-            result[5, 0] = 6;
-            result[5, 1] = 9;
-            result[5, 2] = 4;
-            result[5, 3] = 8;
-            result[5, 4] = 3;
-            result[5, 5] = 7;
-            result[5, 6] = 2;
-            result[5, 7] = 5;
-            result[5, 8] = 1;
-
-            result[6, 0] = 4;
-            result[6, 1] = 6;
-            result[6, 2] = 5;
-            result[6, 3] = 9;
-            result[6, 4] = 1;
-            result[6, 5] = 3;
-            result[6, 6] = 7;
-            result[6, 7] = 2;
-            result[6, 8] = 8;
-
-            result[7, 0] = 2;
-            result[7, 1] = 3;
-            result[7, 2] = 1;
-            result[7, 3] = 7;
-            result[7, 4] = 8;
-            result[7, 5] = 6;
-            result[7, 6] = 5;
-            result[7, 7] = 9;
-            result[7, 8] = 4;
-
-            result[8, 0] = 9;
-            result[8, 1] = 7;
-            result[8, 2] = 8;
-            result[8, 3] = 5;
-            result[8, 4] = 4;
-            result[8, 5] = 2;
-            result[8, 6] = 6;
-            result[8, 7] = 1;
-            result[8, 8] = 3;
-
-            return result;
-        }
-
         public void PrintMatrix(int[,] matrix)
         {
             for (int x = 0; x < matrix.GetLongLength(0); x++)
@@ -217,10 +117,27 @@ namespace SudokuWebMVC.Helpers
 
     public class SudokuGenerator
     {
-        public int[,] LoadRandom()
+        public int[,] LoadRandom(int Method)
         {
             var FinalMatrix = new int[9, 9];
-            var sudokuOrderForAdding = new SudokuOrderForAdding().GetSudokuOrderForAdding_CrossMethod();
+            List<SudokuOrderForAdding> sudokuOrderForAdding = new List<SudokuOrderForAdding>();
+            switch (Method)
+            {
+                case 1:
+                    sudokuOrderForAdding = new SudokuOrderForAdding().GetSudokuOrderForAdding_OrderedMethod();
+                    break;
+                case 2:
+                    sudokuOrderForAdding = new SudokuOrderForAdding().GetSudokuOrderForAdding_CrossMethod();
+                    break;
+                case 3:
+                    sudokuOrderForAdding = new SudokuOrderForAdding().GetSudokuOrderForAdding_SpiralMethod();
+                    break;
+                case 4:
+                    sudokuOrderForAdding = new SudokuOrderForAdding().GetSudokuOrderForAdding_SpiralInvertedMethod();
+                    break;
+                default:
+                    return default;
+            }
             int MaxAttempts = (9*8*7*6*5*4*3*2*1);
             int CurrentLastAttempt = 0;
             while (!MatrixIsDone(FinalMatrix))
@@ -245,7 +162,7 @@ namespace SudokuWebMVC.Helpers
                     FinalMatrix = FinalMatrixCopy;
                     //this group has passed the validations.
                     sudokuOrderForAdding[CurrentOrder.Order - 1].Done = true;
-                    Console.WriteLine("Group Added " + CurrentOrder.Order);
+                    Console.WriteLine("Group Added " + CurrentOrder.Value);
                 }
                 
                 CurrentLastAttempt++;
@@ -261,19 +178,11 @@ namespace SudokuWebMVC.Helpers
                 throw new ArgumentNullException(nameof(matrix));
             }
 
-            // set all validations in single line after testing.
-            if (new SudokuValidations().ValidateBySum(matrix))
+            if (new SudokuValidations().ValidateBySum(matrix) && 
+                new SudokuValidations().ValidateRowsAndColumns(matrix) && 
+                new SudokuValidations().ValidateAllInnerMatrix(matrix))
             {
-                //validate all rows and columns
-                if (new SudokuValidations().ValidateRowsAndColumns(matrix))
-                {
-                    if (new SudokuValidations().ValidateAllInnerMatrix(matrix))
-                    {
-                        return true;
-                    }
-                    else return false;
-                }
-                else return false;
+                return true;
             }
             else return false;
         }
@@ -555,5 +464,37 @@ namespace SudokuWebMVC.Helpers
                 new SudokuOrderForAdding { Order = 9, Value = 9, XCoordinate = 6, YCoordinate = 6 }
             };
         }
+        public List<SudokuOrderForAdding> GetSudokuOrderForAdding_SpiralMethod()
+        {
+            return new List<SudokuOrderForAdding>
+            {
+                new SudokuOrderForAdding { Order = 1, Value = 1, XCoordinate = 0, YCoordinate = 0 },
+                new SudokuOrderForAdding { Order = 2, Value = 2, XCoordinate = 0, YCoordinate = 3 },
+                new SudokuOrderForAdding { Order = 3, Value = 3, XCoordinate = 0, YCoordinate = 6 },
+                new SudokuOrderForAdding { Order = 4, Value = 6, XCoordinate = 3, YCoordinate = 6 },
+                new SudokuOrderForAdding { Order = 5, Value = 9, XCoordinate = 6, YCoordinate = 6 },
+                new SudokuOrderForAdding { Order = 6, Value = 8, XCoordinate = 6, YCoordinate = 3 },
+                new SudokuOrderForAdding { Order = 7, Value = 7, XCoordinate = 6, YCoordinate = 0 },
+                new SudokuOrderForAdding { Order = 8, Value = 4, XCoordinate = 3, YCoordinate = 0 },
+                new SudokuOrderForAdding { Order = 9, Value = 5, XCoordinate = 3, YCoordinate = 3 }
+            };
+        }
+
+        public List<SudokuOrderForAdding> GetSudokuOrderForAdding_SpiralInvertedMethod()
+        {
+            return new List<SudokuOrderForAdding>
+            {
+                new SudokuOrderForAdding { Order = 1, Value = 5, XCoordinate = 3, YCoordinate = 3 },
+                new SudokuOrderForAdding { Order = 2, Value = 6, XCoordinate = 3, YCoordinate = 6 },
+                new SudokuOrderForAdding { Order = 3, Value = 3, XCoordinate = 0, YCoordinate = 6 },
+                new SudokuOrderForAdding { Order = 4, Value = 2, XCoordinate = 0, YCoordinate = 3 },
+                new SudokuOrderForAdding { Order = 5, Value = 1, XCoordinate = 0, YCoordinate = 0 },
+                new SudokuOrderForAdding { Order = 6, Value = 4, XCoordinate = 3, YCoordinate = 0 },
+                new SudokuOrderForAdding { Order = 7, Value = 7, XCoordinate = 6, YCoordinate = 0 },
+                new SudokuOrderForAdding { Order = 8, Value = 8, XCoordinate = 6, YCoordinate = 3 },
+                new SudokuOrderForAdding { Order = 9, Value = 9, XCoordinate = 6, YCoordinate = 6 }
+            };
+        }
+
     }
 }
