@@ -15,17 +15,124 @@ namespace SudokuWebMVC.Helpers
 
         public int[,] GenerateRandom()
         {
-            var matrix = LoadRandom();
-            if (Validate(matrix))
-            {
+            int[,] matrix = new int[9, 9];
+            bool isValid = false;
 
+            while (!isValid)
+            {
+                matrix = LoadRandom();
+                Console.WriteLine("Validating");
+                PrintMatrix(matrix);
+                isValid = Validate(matrix);
             }
-            return default;
+
+            return matrix;
         }
 
         private int[,] LoadRandom()
         {
-            return default;
+            var FinalMatrix = new int[9, 9];
+            var sudokuOrderForAdding = new SudokuOrderForAdding().GetSudokuOrderForAddings();
+
+            while (!MatrixIsDone(FinalMatrix))
+            {
+                var CurrentOrder = sudokuOrderForAdding.Where(a => !a.Done).Take(1).First();
+                var TemporalMatrix = GetTentativeValues();
+                var FinalMatrixCopy = FinalMatrix;
+
+                AddToMatrix(ref FinalMatrixCopy, TemporalMatrix, CurrentOrder);
+
+                //Validate. 
+                if (ValidateTemporalAdding(FinalMatrixCopy))
+                {
+                    FinalMatrix = FinalMatrixCopy;
+                    //this group has passed the validations.
+                    sudokuOrderForAdding[CurrentOrder.Order - 1].Done = true;
+                    Console.WriteLine("Group Added " + CurrentOrder.Order);
+                }
+            }
+
+            return FinalMatrix;
+        }
+
+        private bool ValidateTemporalAdding(int[,] matrix)
+        {
+            //rows
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                var array = GetRow(matrix, i);
+                if (!ValidateDuplicatedTemporalValuesInArray(array))
+                {
+                    return false;
+                }
+            }
+
+            //columns
+            for (int i = 0; i < matrix.GetLength(1); i++)
+            {
+                var array = GetColumn(matrix, i);
+                if (!ValidateDuplicatedTemporalValuesInArray(array))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool ValidateDuplicatedTemporalValuesInArray(int[] array)
+        {
+            var result = array.GroupBy(x => x).Select(x => new { key = x.Key, val = x.Count() });
+            return !result.Where(a => a.key != 0 && a.val > 1).Any();
+        }
+
+        private void AddToMatrix(ref int[,] destination, int[,] origin, SudokuOrderForAdding order)
+        {
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    destination[order.XCoordinate + x, order.YCoordinate + y] = origin[x, y];
+                }
+            }
+        }
+
+        private int[,] GetTentativeValues()
+        {
+            var TmpMatrix = new int[3, 3];
+            var Ints = GetRandomizedIntegerList();
+            int i = 0;
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    TmpMatrix[x, y] = Ints[i];
+                    i++;
+                }
+            }
+
+            return TmpMatrix;
+        }
+
+        private List<int> GetRandomizedIntegerList()
+        {
+            List<int> ints = new List<int>();
+            while (ints.Count < 9)
+            {
+                Random random = new Random();
+                int rnd = random.Next(1, 10);
+                if (!ints.Where(a => a.Equals(rnd)).Any())
+                {
+                    ints.Add(rnd);
+                }
+            }
+
+            return ints;
+        }
+
+        private bool MatrixIsDone(int[,] matrix)
+        {
+            return ValidateBySum(matrix);
         }
 
         public bool Validate(int[,] matrix)
@@ -49,7 +156,8 @@ namespace SudokuWebMVC.Helpers
                 }
                 else return false;
 
-            }else return false;
+            }
+            else return false;
         }
 
         /// <summary>
@@ -325,6 +433,18 @@ namespace SudokuWebMVC.Helpers
                     .Select(x => matrix[rowNumber, x])
                     .ToArray();
         }
+
+        public void PrintMatrix(int[,] matrix)
+        {
+            for (int x = 0; x < matrix.GetLongLength(0); x++)
+            {
+                for (int y = 0; y < matrix.GetLongLength(1); y++)
+                {
+                    Console.Write(matrix[x, y]);
+                }
+                Console.WriteLine("");
+            }
+        }
     }
 
     public class SudokuGrid
@@ -332,5 +452,26 @@ namespace SudokuWebMVC.Helpers
         public int XCoordinate { get; set; }
         public int YCoordinate { get; set; }
         public int Value { get; set; }
+    }
+
+    public class SudokuOrderForAdding : SudokuGrid
+    {
+        public int Order { get; set; }
+        public bool Done { get; set; }
+        public List<SudokuOrderForAdding> GetSudokuOrderForAddings()
+        {
+            return new List<SudokuOrderForAdding>
+            {
+                new SudokuOrderForAdding { Order = 1, Value = 4, XCoordinate = 3, YCoordinate = 0 },
+                new SudokuOrderForAdding { Order = 2, Value = 5, XCoordinate = 3, YCoordinate = 3 },
+                new SudokuOrderForAdding { Order = 3, Value = 6, XCoordinate = 3, YCoordinate = 6 },
+                new SudokuOrderForAdding { Order = 4, Value = 2, XCoordinate = 0, YCoordinate = 3 },
+                new SudokuOrderForAdding { Order = 5, Value = 8, XCoordinate = 6, YCoordinate = 3 },
+                new SudokuOrderForAdding { Order = 6, Value = 1, XCoordinate = 0, YCoordinate = 0 },
+                new SudokuOrderForAdding { Order = 7, Value = 3, XCoordinate = 0, YCoordinate = 6 },
+                new SudokuOrderForAdding { Order = 8, Value = 7, XCoordinate = 6, YCoordinate = 0 },
+                new SudokuOrderForAdding { Order = 9, Value = 9, XCoordinate = 6, YCoordinate = 6 }
+            };
+        }
     }
 }
