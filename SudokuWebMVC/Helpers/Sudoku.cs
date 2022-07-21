@@ -20,119 +20,13 @@ namespace SudokuWebMVC.Helpers
 
             while (!isValid)
             {
-                matrix = LoadRandom();
+                matrix = new SudokuGenerator().LoadRandom();
                 Console.WriteLine("Validating");
                 PrintMatrix(matrix);
                 isValid = Validate(matrix);
             }
 
             return matrix;
-        }
-
-        private int[,] LoadRandom()
-        {
-            var FinalMatrix = new int[9, 9];
-            var sudokuOrderForAdding = new SudokuOrderForAdding().GetSudokuOrderForAddings();
-
-            while (!MatrixIsDone(FinalMatrix))
-            {
-                var CurrentOrder = sudokuOrderForAdding.Where(a => !a.Done).Take(1).First();
-                var TemporalMatrix = GetTentativeValues();
-                var FinalMatrixCopy = FinalMatrix;
-
-                AddToMatrix(ref FinalMatrixCopy, TemporalMatrix, CurrentOrder);
-
-                //Validate. 
-                if (ValidateTemporalAdding(FinalMatrixCopy))
-                {
-                    FinalMatrix = FinalMatrixCopy;
-                    //this group has passed the validations.
-                    sudokuOrderForAdding[CurrentOrder.Order - 1].Done = true;
-                    Console.WriteLine("Group Added " + CurrentOrder.Order);
-                }
-            }
-
-            return FinalMatrix;
-        }
-
-        private bool ValidateTemporalAdding(int[,] matrix)
-        {
-            //rows
-            for (int i = 0; i < matrix.GetLength(0); i++)
-            {
-                var array = GetRow(matrix, i);
-                if (!ValidateDuplicatedTemporalValuesInArray(array))
-                {
-                    return false;
-                }
-            }
-
-            //columns
-            for (int i = 0; i < matrix.GetLength(1); i++)
-            {
-                var array = GetColumn(matrix, i);
-                if (!ValidateDuplicatedTemporalValuesInArray(array))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private bool ValidateDuplicatedTemporalValuesInArray(int[] array)
-        {
-            var result = array.GroupBy(x => x).Select(x => new { key = x.Key, val = x.Count() });
-            return !result.Where(a => a.key != 0 && a.val > 1).Any();
-        }
-
-        private void AddToMatrix(ref int[,] destination, int[,] origin, SudokuOrderForAdding order)
-        {
-            for (int x = 0; x < 3; x++)
-            {
-                for (int y = 0; y < 3; y++)
-                {
-                    destination[order.XCoordinate + x, order.YCoordinate + y] = origin[x, y];
-                }
-            }
-        }
-
-        private int[,] GetTentativeValues()
-        {
-            var TmpMatrix = new int[3, 3];
-            var Ints = GetRandomizedIntegerList();
-            int i = 0;
-            for (int x = 0; x < 3; x++)
-            {
-                for (int y = 0; y < 3; y++)
-                {
-                    TmpMatrix[x, y] = Ints[i];
-                    i++;
-                }
-            }
-
-            return TmpMatrix;
-        }
-
-        private List<int> GetRandomizedIntegerList()
-        {
-            List<int> ints = new List<int>();
-            while (ints.Count < 9)
-            {
-                Random random = new Random();
-                int rnd = random.Next(1, 10);
-                if (!ints.Where(a => a.Equals(rnd)).Any())
-                {
-                    ints.Add(rnd);
-                }
-            }
-
-            return ints;
-        }
-
-        private bool MatrixIsDone(int[,] matrix)
-        {
-            return ValidateBySum(matrix);
         }
 
         public bool Validate(int[,] matrix)
@@ -143,12 +37,12 @@ namespace SudokuWebMVC.Helpers
             }
 
             // set all validations in single line after testing.
-            if (ValidateBySum(matrix))
+            if (new SudokuValidations().ValidateBySum(matrix))
             {
                 //validate all rows and columns
-                if (ValidateRowsAndColumns(matrix))
+                if (new SudokuValidations().ValidateRowsAndColumns(matrix))
                 {
-                    if (ValidateAllInnerMatrix(matrix))
+                    if (new SudokuValidations().ValidateAllInnerMatrix(matrix))
                     {
                         return true;
                     }
@@ -160,92 +54,6 @@ namespace SudokuWebMVC.Helpers
             else return false;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="array">Multidimensional array to validate</param>
-        /// <param name="complete">True when validating all the board, False when validating inner matrix</param>
-        /// <returns></returns>
-        private bool ValidateBySum(int[,] array, bool complete = true)
-        {
-            int SumResult = 0;
-            for (int x = 0; x < array.GetLength(0); x++)
-            {
-                for (int y = 0; y < array.GetLength(1); y++)
-                {
-                    SumResult += array[x, y];
-                }
-            }
-
-            return SumResult == (complete ? 405 : 45);
-        }
-
-        private bool ValidateRowOrColumn(int[] singleArray)
-        {
-            //single validation by sum is performed first. Sum of numbers from 1 to 9 is equal to 45
-            if (singleArray.Sum(a => a) == 45)
-            {
-                //Additional Validation. Find duplicate numbers
-                return ValidateDuplicatedNumbersInArray(singleArray);
-            }
-            else return false;
-        }
-
-        private bool ValidateAllInnerMatrix(int[,] matrix)
-        {
-            int x = 0;
-            int y = 0;
-
-            for (int i = 0; i < 9; i++)
-            {
-                if (i == 3 || i == 6 || i == 9)
-                {
-                    y = 0;
-                    x = x + 3;
-                }
-                var matx = MatrixToSmallMatrix(matrix, x, x + 2, y, y + 2);
-                if (!ValidateInnerMatrix(matx)) return false;
-                y = y + 3;
-
-            }
-
-            return true;
-        }
-
-        private bool ValidateInnerMatrix(int[,] innerMatrix)
-        {
-            //Sum of the inner matrix should be 45
-            if (ValidateBySum(innerMatrix, false))
-            {
-                //Convert to unidimensional array.
-                int[] singleArray = MatrixToSingleArray(innerMatrix);
-                return ValidateDuplicatedNumbersInArray(singleArray);
-            }
-            else return false;
-        }
-
-        private bool ValidateRowsAndColumns(int[,] matrix)
-        {
-            //validate all rows
-            for (int x = 0; x < matrix.GetLength(0); x++)
-            {
-                if (!ValidateRowOrColumn(GetRow(matrix, x)))
-                {
-                    return false;
-                }
-            }
-
-            //validate all columns
-            for (int y = 0; y < matrix.GetLength(1); y++)
-            {
-                if (!ValidateRowOrColumn(GetColumn(matrix, y)))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
         public SudokuGrid ShowHint(int?[,] array)
         {
             if (array is null)
@@ -369,12 +177,251 @@ namespace SudokuWebMVC.Helpers
             return result;
         }
 
+        public void PrintMatrix(int[,] matrix)
+        {
+            for (int x = 0; x < matrix.GetLongLength(0); x++)
+            {
+                for (int y = 0; y < matrix.GetLongLength(1); y++)
+                {
+                    Console.Write(matrix[x, y]);
+                }
+                Console.WriteLine("");
+            }
+        }
+    }
+
+    public class SudokuGenerator
+    {
+        public int[,] LoadRandom()
+        {
+            var FinalMatrix = new int[9, 9];
+            var sudokuOrderForAdding = new SudokuOrderForAdding().GetSudokuOrderForAddings();
+            int MaxAttempts = (9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 * 1) /2 ;
+            int CurrentLastAttempt = 0;
+            while (!MatrixIsDone(FinalMatrix))
+            {
+                if (CurrentLastAttempt > MaxAttempts)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Reaching limit of combinations --- > Skipping");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                }
+                var CurrentOrder = sudokuOrderForAdding.Where(a => !a.Done).Take(1).First();
+                var TemporalMatrix = GetTentativeValues();
+                var FinalMatrixCopy = FinalMatrix;
+
+                AddToMatrix(ref FinalMatrixCopy, TemporalMatrix, CurrentOrder);
+
+                //Validate. 
+                if (ValidateTemporalAdding(FinalMatrixCopy))
+                {
+                    FinalMatrix = FinalMatrixCopy;
+                    //this group has passed the validations.
+                    sudokuOrderForAdding[CurrentOrder.Order - 1].Done = true;
+                    Console.WriteLine("Group Added " + CurrentOrder.Order);
+                }
+                else if(CurrentOrder.Order == 9)
+                {
+                    CurrentLastAttempt++;
+                }
+            }
+
+            return FinalMatrix;
+        }
+
+        public bool MatrixIsDone(int[,] matrix)
+        {
+            if (matrix is null)
+            {
+                throw new ArgumentNullException(nameof(matrix));
+            }
+
+            // set all validations in single line after testing.
+            if (new SudokuValidations().ValidateBySum(matrix))
+            {
+                //validate all rows and columns
+                if (new SudokuValidations().ValidateRowsAndColumns(matrix))
+                {
+                    if (new SudokuValidations().ValidateAllInnerMatrix(matrix))
+                    {
+                        return true;
+                    }
+                    else return false;
+                }
+                else return false;
+            }
+            else return false;
+        }
+
+        public bool ValidateTemporalAdding(int[,] matrix)
+        {
+            var Validations = new SudokuValidations();
+
+            //rows
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                var array = Validations.GetRow(matrix, i);
+                if (!Validations.ValidateDuplicatedTemporalValuesInArray(array))
+                {
+                    return false;
+                }
+            }
+
+            //columns
+            for (int i = 0; i < matrix.GetLength(1); i++)
+            {
+                var array = Validations.GetColumn(matrix, i);
+                if (!Validations.ValidateDuplicatedTemporalValuesInArray(array))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void AddToMatrix(ref int[,] destination, int[,] origin, SudokuOrderForAdding order)
+        {
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    destination[order.XCoordinate + x, order.YCoordinate + y] = origin[x, y];
+                }
+            }
+        }
+
+        private int[,] GetTentativeValues()
+        {
+            var TmpMatrix = new int[3, 3];
+            var Ints = GetRandomizedIntegerList();
+            int i = 0;
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    TmpMatrix[x, y] = Ints[i];
+                    i++;
+                }
+            }
+
+            return TmpMatrix;
+        }
+
+        private List<int> GetRandomizedIntegerList()
+        {
+            List<int> ints = new List<int>();
+            while (ints.Count < 9)
+            {
+                Random random = new Random();
+                int rnd = random.Next(1, 10);
+                if (!ints.Where(a => a.Equals(rnd)).Any())
+                {
+                    ints.Add(rnd);
+                }
+            }
+
+            return ints;
+        }
+
+    }
+
+    public class SudokuValidations
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="array">Multidimensional array to validate</param>
+        /// <param name="complete">True when validating all the board, False when validating inner matrix</param>
+        /// <returns></returns>
+        public bool ValidateBySum(int[,] array, bool complete = true)
+        {
+            int SumResult = 0;
+            for (int x = 0; x < array.GetLength(0); x++)
+            {
+                for (int y = 0; y < array.GetLength(1); y++)
+                {
+                    SumResult += array[x, y];
+                }
+            }
+
+            return SumResult == (complete ? 405 : 45);
+        }
+
+        public bool ValidateRowOrColumn(int[] singleArray)
+        {
+            //single validation by sum is performed first. Sum of numbers from 1 to 9 is equal to 45
+            if (singleArray.Sum(a => a) == 45)
+            {
+                //Additional Validation. Find duplicate numbers
+                return ValidateDuplicatedNumbersInArray(singleArray);
+            }
+            else return false;
+        }
+
+        public bool ValidateAllInnerMatrix(int[,] matrix)
+        {
+            int x = 0;
+            int y = 0;
+
+            for (int i = 0; i < 9; i++)
+            {
+                if (i == 3 || i == 6 || i == 9)
+                {
+                    y = 0;
+                    x = x + 3;
+                }
+                var matx = MatrixToSmallMatrix(matrix, x, x + 2, y, y + 2);
+                if (!ValidateInnerMatrix(matx)) return false;
+                y = y + 3;
+
+            }
+
+            return true;
+        }
+
+        public bool ValidateInnerMatrix(int[,] innerMatrix)
+        {
+            //Sum of the inner matrix should be 45
+            if (ValidateBySum(innerMatrix, false))
+            {
+                //Convert to unidimensional array.
+                int[] singleArray = MatrixToSingleArray(innerMatrix);
+                return ValidateDuplicatedNumbersInArray(singleArray);
+            }
+            else return false;
+        }
+
+        public bool ValidateRowsAndColumns(int[,] matrix)
+        {
+            //validate all rows
+            for (int x = 0; x < matrix.GetLength(0); x++)
+            {
+                if (!ValidateRowOrColumn(GetRow(matrix, x)))
+                {
+                    return false;
+                }
+            }
+
+            //validate all columns
+            for (int y = 0; y < matrix.GetLength(1); y++)
+            {
+                if (!ValidateRowOrColumn(GetColumn(matrix, y)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Convert a matrix to a unidimensional array from left to right, from top to bottom.
         /// </summary>
         /// <param name="matrix"></param>
         /// <returns></returns>
-        private int[] MatrixToSingleArray(int[,] matrix)
+        public int[] MatrixToSingleArray(int[,] matrix)
         {
             int[] singleArray = new int[matrix.GetLength(0) * matrix.GetLength(1)];
             int i = 0;
@@ -390,7 +437,7 @@ namespace SudokuWebMVC.Helpers
             return singleArray;
         }
 
-        private int[,] MatrixToSmallMatrix(int[,] matrix, int startX, int endX, int startY, int endY)
+        public int[,] MatrixToSmallMatrix(int[,] matrix, int startX, int endX, int startY, int endY)
         {
             int[,] InnerMatrix = new int[3, 3];
             int NewX = 0;
@@ -414,37 +461,32 @@ namespace SudokuWebMVC.Helpers
         /// </summary>
         /// <param name="array"></param>
         /// <returns>True when validation succeed</returns>
-        private bool ValidateDuplicatedNumbersInArray(int[] array)
+        public bool ValidateDuplicatedNumbersInArray(int[] array)
         {
             var result = array.GroupBy(x => x).Select(x => new { key = x.Key, val = x.Count() });
             return !result.Where(a => a.val > 1).Any();
         }
 
-        private int[] GetColumn(int[,] matrix, int columnNumber)
+        public int[] GetColumn(int[,] matrix, int columnNumber)
         {
             return Enumerable.Range(0, matrix.GetLength(0))
                     .Select(x => matrix[x, columnNumber])
                     .ToArray();
         }
 
-        private int[] GetRow(int[,] matrix, int rowNumber)
+        public int[] GetRow(int[,] matrix, int rowNumber)
         {
             return Enumerable.Range(0, matrix.GetLength(1))
                     .Select(x => matrix[rowNumber, x])
                     .ToArray();
         }
 
-        public void PrintMatrix(int[,] matrix)
+        public bool ValidateDuplicatedTemporalValuesInArray(int[] array)
         {
-            for (int x = 0; x < matrix.GetLongLength(0); x++)
-            {
-                for (int y = 0; y < matrix.GetLongLength(1); y++)
-                {
-                    Console.Write(matrix[x, y]);
-                }
-                Console.WriteLine("");
-            }
+            var result = array.GroupBy(x => x).Select(x => new { key = x.Key, val = x.Count() });
+            return !result.Where(a => a.key != 0 && a.val > 1).Any();
         }
+
     }
 
     public class SudokuGrid
