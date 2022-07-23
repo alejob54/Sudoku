@@ -15,40 +15,32 @@ namespace SudokuWebMVC.Helpers
             bool isValid = false;
             DateTime start = DateTime.UtcNow;
 
-            while (true)
+            if (Method.Equals(5))
             {
-                matrix = new SudokuGenerator().LoadRandom(Method);
-                isValid = new SudokuValidations().MatrixIsDone(matrix);
-
-                if (isValid)
+                new SudokuGenerator().RandomizeFromFolder();
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Process Finished");
+            }
+            else
+            {
+                while (true)
                 {
-                    var end = DateTime.UtcNow;
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("Found in " + (end.Subtract(start).TotalMinutes));
-                    PrintMatrix(matrix);
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Save(matrix);
-                    start = DateTime.UtcNow;
+                    matrix = new SudokuGenerator().LoadRandom(Method);
+
+                    isValid = new SudokuValidations().MatrixIsDone(matrix);
+
+                    if (isValid)
+                    {
+                        var end = DateTime.UtcNow;
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("Found in " + (end.Subtract(start).TotalMinutes));
+                        PrintMatrix(matrix);
+                        Console.ForegroundColor = ConsoleColor.White;
+                        new SudokuGenerator().Save(matrix);
+                        start = DateTime.UtcNow;
+                    }
                 }
             }
-        }
-
-        private void Save(int[,] matrix)
-        {
-            StringBuilder sb = new StringBuilder();
-            for (int x = 0; x < matrix.GetLength(0); x++)
-            {
-                for (int y = 0; y < matrix.GetLength(1); y++)
-                {
-                    sb.Append(matrix[x, y]);
-                }
-                sb.AppendLine();
-            }
-            if (!Directory.Exists(@"C:/sudoku/"))
-            {
-                Directory.CreateDirectory(@"C:/sudoku/");
-            }
-            File.WriteAllText(@"C:/sudoku/" + Guid.NewGuid() + ".txt", sb.ToString());
         }
 
         public SudokuGrid ShowHint(int?[,] array)
@@ -92,6 +84,11 @@ namespace SudokuWebMVC.Helpers
 
     public class SudokuGenerator
     {
+        public class BoardRandomizer
+        {
+            public int Number { get; set; }
+            public int ReplacedNumber { get; set; }
+        }
         public int[,] LoadRandom(int Method)
         {
             var FinalMatrix = new int[9, 9];
@@ -113,7 +110,7 @@ namespace SudokuWebMVC.Helpers
                 default:
                     return default;
             }
-            int MaxAttempts = (9*8*7*6*5*4*3*2*1);
+            int MaxAttempts = (9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 * 1);
             int CurrentLastAttempt = 0;
             while (!new SudokuValidations().MatrixIsDone(FinalMatrix))
             {
@@ -133,13 +130,13 @@ namespace SudokuWebMVC.Helpers
                 //Validate. 
                 if (ValidateTemporalAdding(FinalMatrixCopy))
                 {
-                    CurrentLastAttempt = 0;
                     FinalMatrix = FinalMatrixCopy;
                     //this group has passed the validations.
                     sudokuOrderForAdding[CurrentOrder.Order - 1].Done = true;
-                    Console.WriteLine("Group Added " + CurrentOrder.Value);
+                    Console.WriteLine("Group Added " + CurrentOrder.Value + " after " + CurrentLastAttempt + "attempts");
+                    CurrentLastAttempt = 0;
                 }
-                
+
                 CurrentLastAttempt++;
             }
 
@@ -215,6 +212,109 @@ namespace SudokuWebMVC.Helpers
             }
 
             return ints;
+        }
+
+        public void RandomizeFromFolder()
+        {
+            string FolderPath = @"C:/sudoku/";
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            foreach (string item in Directory.GetFiles(FolderPath))
+            {
+                //get current board
+                var Matrix = new SudokuValidator().ConvertFileToMatrix(File.ReadAllLines(item));
+                //validate first this is a valid board
+                if (new SudokuValidations().MatrixIsDone(Matrix))
+                {
+                    //replace by new values
+                    var NewMatrix = ReplaceMatrix(Matrix);
+                    if (new SudokuValidations().MatrixIsDone(NewMatrix))
+                    {
+                        Save(NewMatrix);
+                        Console.WriteLine($"Matrix {item} has been mixed successfully");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ReplaceNumbersToLetters">True when replacing numbers to letters. False when opposite</param>
+        /// <returns>Matrix with values replaced</returns>
+        private int[,] ReplaceMatrix(int[,] inputMatrix)
+        {
+            //find and replace all current values for new ones,
+            //For example, all #1 by 33, all #2 by 77, all #3 by 99 and so on.
+            //Those are random generated numbers.
+
+            var BoardRandomizer = GetBoardRandomizers();
+            for (int x = 0; x < inputMatrix.GetLength(0); x++)
+            {
+                for (int y = 0; y < inputMatrix.GetLength(1); y++)
+                {
+                    inputMatrix[x, y] = FindNewNumber(BoardRandomizer, inputMatrix[x, y]);
+                }
+            }
+
+            //Now that the matrix is all shuffled, lets get the new values for each.
+            //To do this, we're just going to take the first number
+            //so, if we replaced 5 by 77, we're taking the first 7 and we are done.
+            //all the 5 are now a 7, (as an example).
+
+            for (int x = 0; x < inputMatrix.GetLength(0); x++)
+            {
+                for (int y = 0; y < inputMatrix.GetLength(1); y++)
+                {
+                    inputMatrix[x, y] = int.Parse(inputMatrix[x, y].ToString()[..1]);
+                }
+            }
+
+            return inputMatrix;
+        }
+
+        private int FindNewNumber(List<BoardRandomizer> BoardRandomizer, int CurrentNumber)
+        {
+            return BoardRandomizer.Where(a => a.Number.Equals(CurrentNumber)).First().ReplacedNumber;   
+        }
+
+        private List<BoardRandomizer> GetBoardRandomizers()
+        {
+            List<BoardRandomizer> BoardRandomizers = new List<BoardRandomizer>();
+
+            var IntegerList = GetRandomizedIntegerList();
+            int j = 1;
+            foreach (int item in IntegerList)
+            {
+                var NewNumber = item;
+                //convert 1 in 11, 2 in 22 and so on ...
+                for (int i = 0; i < 10; i++)
+                {
+                    NewNumber += item;
+                }
+                BoardRandomizers.Add(new BoardRandomizer { Number = j, ReplacedNumber = NewNumber });
+                j++;
+            }
+
+            return BoardRandomizers;
+        }
+
+        public void Save(int[,] matrix)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int x = 0; x < matrix.GetLength(0); x++)
+            {
+                for (int y = 0; y < matrix.GetLength(1); y++)
+                {
+                    sb.Append(matrix[x, y]);
+                }
+                sb.AppendLine();
+            }
+            if (!Directory.Exists(@"C:/sudoku/"))
+            {
+                Directory.CreateDirectory(@"C:/sudoku/");
+            }
+            File.WriteAllText(@"C:/sudoku/" + Guid.NewGuid() + ".txt", sb.ToString());
         }
 
     }
@@ -426,7 +526,7 @@ namespace SudokuWebMVC.Helpers
             }
         }
 
-        private int[,] ConvertFileToMatrix(string[] content)
+        public int[,] ConvertFileToMatrix(string[] content)
         {
             int[,] matrix = new int[9, 9];
             int x = 0;

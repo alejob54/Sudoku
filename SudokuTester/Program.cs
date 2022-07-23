@@ -7,7 +7,11 @@ namespace SudokuTester
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("SUDOKU TESTER");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("*************************************************************************");
+            Console.WriteLine("***************************** SUDOKU TESTER *****************************");
+            Console.WriteLine("*************************************************************************");
+
             Console.WriteLine("1. Generate Sudokus");
             Console.WriteLine("2. Validate Folder");
             int input = int.Parse(Console.ReadLine());
