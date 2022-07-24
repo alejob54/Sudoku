@@ -1,4 +1,5 @@
 ﻿using System;
+using SudokuWebMVC.Enum;
 using SudokuWebMVC.Helpers;
 
 namespace SudokuTester
@@ -14,14 +15,19 @@ namespace SudokuTester
 
             Console.WriteLine("1. Generate Sudokus");
             Console.WriteLine("2. Validate Folder");
+            Console.WriteLine("3. Get new board");
             int input = int.Parse(Console.ReadLine());
-            if (input == 1)
+            switch (input)
             {
-                TestGenerateRandomSudoku();
-            }
-            else if (input == 2)
-            {
-                ValidateFolder();
+                case 1:
+                    TestGenerateRandomSudoku();
+                    break;
+                case 2:
+                    ValidateFolder();
+                    break;
+                case 3:
+                    GetNewBoard();
+                    break;
             }
 
             Console.ReadKey();
@@ -50,6 +56,22 @@ namespace SudokuTester
 
             SudokuValidator sudokuValidator = new SudokuValidator();
             sudokuValidator.ValidateFolder(@"C:/sudoku/", input == 2);
+        }
+
+        static void GetNewBoard()
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("Choose Difficulty:");
+            Console.WriteLine("1. Easy");
+            Console.WriteLine("2. Medium");
+            Console.WriteLine("3. Hard");
+            Console.ForegroundColor = ConsoleColor.White;
+            int Dif = int.Parse(Console.ReadLine());
+            var NewBoard = new SudokuGenerator().LoadFromFile();
+            NewBoard = new SudokuGenerator().PrepareBoard((Difficulty)Dif, NewBoard);
+            Console.WriteLine("---------");
+            new Sudoku().PrintMatrix(NewBoard);
+            Console.WriteLine("---------");
         }
     }
 }

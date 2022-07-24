@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using SudokuWebMVC.Enum;
 
 namespace SudokuWebMVC.Helpers
 {
@@ -43,31 +44,31 @@ namespace SudokuWebMVC.Helpers
             }
         }
 
-        public SudokuGrid ShowHint(int?[,] array)
-        {
-            if (array is null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
+        //public SudokuGrid ShowHint(int?[,] array)
+        //{
+        //    if (array is null)
+        //    {
+        //        throw new ArgumentNullException(nameof(array));
+        //    }
 
-            List<SudokuGrid> EmptySquares = new List<SudokuGrid>();
-            for (int x = 0; x < array.GetLength(0); x++)
-            {
-                for (int y = 0; y < array.GetLength(1); y++)
-                {
-                    if (array[x, y] == null)
-                    {
-                        EmptySquares.Add(new SudokuGrid { XCoordinate = x, YCoordinate = y });
-                    }
-                }
-            }
+        //    List<SudokuGrid> EmptySquares = new List<SudokuGrid>();
+        //    for (int x = 0; x < array.GetLength(0); x++)
+        //    {
+        //        for (int y = 0; y < array.GetLength(1); y++)
+        //        {
+        //            if (array[x, y] == null)
+        //            {
+        //                EmptySquares.Add(new SudokuGrid { XCoordinate = x, YCoordinate = y });
+        //            }
+        //        }
+        //    }
 
-            Random random = new Random();
-            int RandomPosition = random.Next(1, EmptySquares.Count);
-            //Pending to store and compare Sudoku, to be able to find the right number in given position
+        //    Random random = new Random();
+        //    int RandomPosition = random.Next(1, EmptySquares.Count);
+        //    //Pending to store and compare Sudoku, to be able to find the right number in given position
 
-            return EmptySquares[RandomPosition];
-        }
+        //    return EmptySquares[RandomPosition];
+        //}
 
         public void PrintMatrix(int[,] matrix)
         {
@@ -75,7 +76,14 @@ namespace SudokuWebMVC.Helpers
             {
                 for (int y = 0; y < matrix.GetLongLength(1); y++)
                 {
-                    Console.Write(matrix[x, y]);
+                    if (matrix[x, y].Equals(0))
+                    {
+                        Console.Write(" ");
+                    }
+                    else
+                    {
+                        Console.Write(matrix[x, y]);
+                    }
                 }
                 Console.WriteLine("");
             }
@@ -143,6 +151,15 @@ namespace SudokuWebMVC.Helpers
             return FinalMatrix;
         }
 
+        public int[,] LoadFromFile()
+        {
+            string Path = @"C:/sudokus/";
+            var Files = Directory.GetFiles(Path);
+            int Random = new Random().Next(0, Files.Count());
+
+            return new SudokuValidator().ConvertFileToMatrix(File.ReadAllLines(Files[Random]));
+        }
+
         public bool ValidateTemporalAdding(int[,] matrix)
         {
             var Validations = new SudokuValidations();
@@ -170,6 +187,8 @@ namespace SudokuWebMVC.Helpers
             return true;
         }
 
+        //add matrix piece to another matrix given a specified coordenates of the location.
+        // i.e., add section 3 from a matrix A to section 3 of matrix B, being 3 the third upper right quadrant.
         private void AddToMatrix(ref int[,] destination, int[,] origin, SudokuOrderForAdding order)
         {
             for (int x = 0; x < 3; x++)
@@ -219,19 +238,22 @@ namespace SudokuWebMVC.Helpers
             string FolderPath = @"C:/sudoku/";
             Console.ForegroundColor = ConsoleColor.Green;
 
-            foreach (string item in Directory.GetFiles(FolderPath))
+            while (true)
             {
-                //get current board
-                var Matrix = new SudokuValidator().ConvertFileToMatrix(File.ReadAllLines(item));
-                //validate first this is a valid board
-                if (new SudokuValidations().MatrixIsDone(Matrix))
+                foreach (string item in Directory.GetFiles(FolderPath))
                 {
-                    //replace by new values
-                    var NewMatrix = ReplaceMatrix(Matrix);
-                    if (new SudokuValidations().MatrixIsDone(NewMatrix))
+                    //get current board
+                    var Matrix = new SudokuValidator().ConvertFileToMatrix(File.ReadAllLines(item));
+                    //validate first this is a valid board
+                    if (new SudokuValidations().MatrixIsDone(Matrix))
                     {
-                        Save(NewMatrix);
-                        Console.WriteLine($"Matrix {item} has been mixed successfully");
+                        //replace by new values
+                        var NewMatrix = ReplaceMatrix(Matrix);
+                        if (new SudokuValidations().MatrixIsDone(NewMatrix))
+                        {
+                            Save(NewMatrix);
+                            Console.WriteLine($"Matrix {item} has been mixed successfully");
+                        }
                     }
                 }
             }
@@ -273,9 +295,9 @@ namespace SudokuWebMVC.Helpers
             return inputMatrix;
         }
 
-        private int FindNewNumber(List<BoardRandomizer> BoardRandomizer, int CurrentNumber)
+        private int FindNewNumber(List<BoardRandomizer> boardRandomizer, int currentNumber)
         {
-            return BoardRandomizer.Where(a => a.Number.Equals(CurrentNumber)).First().ReplacedNumber;   
+            return boardRandomizer.Where(a => a.Number.Equals(currentNumber)).First().ReplacedNumber;
         }
 
         private List<BoardRandomizer> GetBoardRandomizers()
@@ -317,7 +339,47 @@ namespace SudokuWebMVC.Helpers
             File.WriteAllText(@"C:/sudoku/" + Guid.NewGuid() + ".txt", sb.ToString());
         }
 
+        /// <summary>
+        /// Given a matrix return a valid board with removed values ready to be played.
+        /// </summary>
+        /// <param name="difficulty">1 Easy, 2 Medim</param>
+        /// <returns></returns>
+        public int[,] PrepareBoard(Difficulty difficulty, int[,] matrix)
+        {
+            int ToDelete = 0;
+            switch (difficulty)
+            {
+                case Difficulty.Easy:
+                    ToDelete = 24; //61 to solve
+                    break;
+                case Difficulty.Medium:
+                    ToDelete = 47; // 34 to solve
+                    break;
+                case Difficulty.Hard:
+                    ToDelete = 54; //27 to solve
+                    break;
+                default:
+                    break;
+            }
+
+            //Iterate the amount of numbers I'm going to delete.
+            int Deleted = 0;
+            while (Deleted < (ToDelete - 1))
+            {
+                //Go through all 9 quadrants, from 1 to 9
+                for (int QuadrantImWorkingOn = 1; QuadrantImWorkingOn <= 9; QuadrantImWorkingOn++)
+                {
+                    if (Deleted == (ToDelete - 1)) { break; }
+                    new SudokuValidations().DeleteRandomNumberOfThisQuadrant(ref matrix, QuadrantImWorkingOn);
+                    Deleted++;
+                }
+            }
+
+            return matrix;
+        }
     }
+
+
 
     public class SudokuValidations
     {
@@ -341,12 +403,15 @@ namespace SudokuWebMVC.Helpers
             return SumResult == (complete ? 405 : 45);
         }
 
+        /// <summary>
+        /// single validation by sum is performed first. Sum of numbers from 1 to 9 is equal to 45
+        /// </summary>
+        /// <param name="singleArray"></param>
+        /// <returns></returns>
         public bool ValidateRowOrColumn(int[] singleArray)
         {
-            //single validation by sum is performed first. Sum of numbers from 1 to 9 is equal to 45
             if (singleArray.Sum(a => a) == 45)
             {
-                //Additional Validation. Find duplicate numbers
                 return ValidateDuplicatedNumbersInArray(singleArray);
             }
             else return false;
@@ -359,15 +424,9 @@ namespace SudokuWebMVC.Helpers
 
             for (int i = 0; i < 9; i++)
             {
-                if (i == 3 || i == 6 || i == 9)
-                {
-                    y = 0;
-                    x += 3;
-                }
-                var matx = MatrixToSmallMatrix(matrix, x, x + 2, y, y + 2);
-                if (!ValidateInnerMatrix(matx)) return false;
+                if (i == 3 || i == 6 || i == 9) { y = 0; x += 3; }
+                if (!ValidateInnerMatrix(MatrixToSmallMatrix(matrix, x, x + 2, y, y + 2))) return false;
                 y += 3;
-
             }
 
             return true;
@@ -379,8 +438,7 @@ namespace SudokuWebMVC.Helpers
             if (ValidateBySum(innerMatrix, false))
             {
                 //Convert to unidimensional array.
-                int[] singleArray = MatrixToSingleArray(innerMatrix);
-                return ValidateDuplicatedNumbersInArray(singleArray);
+                return ValidateDuplicatedNumbersInArray(MatrixToSingleArray(innerMatrix));
             }
             else return false;
         }
@@ -477,6 +535,26 @@ namespace SudokuWebMVC.Helpers
         {
             var result = array.GroupBy(x => x).Select(x => new { key = x.Key, val = x.Count() });
             return !result.Where(a => a.key != 0 && a.val > 1).Any();
+        }
+
+        public void DeleteRandomNumberOfThisQuadrant(ref int[,] matrix, int quadrant)
+        {
+            var SudokuOrderForRemoving = new SudokuOrderForAdding().GetSudokuOrderForAdding_OrderedMethod();
+            var Coordinates = SudokuOrderForRemoving.Where(a => a.Value.Equals(quadrant)).First();
+            
+            //The following +1 is necessary to include the highest coordinate value.
+            int RandomX = new Random().Next(Coordinates.XCoordinate, (Coordinates.XCoordinate + 2) + 1);
+            int RandomY = new Random().Next(Coordinates.YCoordinate, (Coordinates.YCoordinate + 2) + 1);
+
+            //Call this method recursively until we delete a valid number (x!=0)
+            if (matrix[RandomX, RandomY].Equals(0))
+            {
+                DeleteRandomNumberOfThisQuadrant(ref matrix, quadrant);
+            }
+            else
+            {
+                matrix[RandomX, RandomY] = 0;
+            }
         }
 
         public bool MatrixIsDone(int[,] matrix)
