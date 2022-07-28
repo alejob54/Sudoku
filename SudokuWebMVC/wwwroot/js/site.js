@@ -13,6 +13,8 @@
 OnEvent(document).on('click', 'td', function (e) {
     var input = prompt('Add a number');
     if (!isNaN(input)) {
-        $("#".concat(e.target.id)).html(input);
+        if (input >= 0 && input < 10) {
+            $("#".concat(e.target.id)).html(input);
+        }
     }
 });
