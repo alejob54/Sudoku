@@ -34,7 +34,7 @@ namespace SudokuWebMVC.Helpers
                     {
                         var end = DateTime.UtcNow;
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Found in " + (end.Subtract(start).TotalMinutes));
+                        Console.WriteLine($"Found in {(end.Subtract(start).TotalMinutes)} minutes");
                         PrintMatrix(matrix);
                         Console.ForegroundColor = ConsoleColor.White;
                         new SudokuGenerator().Save(matrix);
@@ -43,32 +43,6 @@ namespace SudokuWebMVC.Helpers
                 }
             }
         }
-
-        //public SudokuGrid ShowHint(int?[,] array)
-        //{
-        //    if (array is null)
-        //    {
-        //        throw new ArgumentNullException(nameof(array));
-        //    }
-
-        //    List<SudokuGrid> EmptySquares = new List<SudokuGrid>();
-        //    for (int x = 0; x < array.GetLength(0); x++)
-        //    {
-        //        for (int y = 0; y < array.GetLength(1); y++)
-        //        {
-        //            if (array[x, y] == null)
-        //            {
-        //                EmptySquares.Add(new SudokuGrid { XCoordinate = x, YCoordinate = y });
-        //            }
-        //        }
-        //    }
-
-        //    Random random = new Random();
-        //    int RandomPosition = random.Next(1, EmptySquares.Count);
-        //    //Pending to store and compare Sudoku, to be able to find the right number in given position
-
-        //    return EmptySquares[RandomPosition];
-        //}
 
         public void PrintMatrix(int[,] matrix)
         {
@@ -119,7 +93,7 @@ namespace SudokuWebMVC.Helpers
                     return default;
             }
             int MaxAttempts = (9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 * 1);
-            int CurrentLastAttempt = 0;
+            int CurrentLastAttempt = 1;
             while (!new SudokuValidations().MatrixIsDone(FinalMatrix))
             {
                 if (CurrentLastAttempt > MaxAttempts)
@@ -141,8 +115,8 @@ namespace SudokuWebMVC.Helpers
                     FinalMatrix = FinalMatrixCopy;
                     //this group has passed the validations.
                     sudokuOrderForAdding[CurrentOrder.Order - 1].Done = true;
-                    Console.WriteLine("Group Added " + CurrentOrder.Value + " after " + CurrentLastAttempt + "attempts");
-                    CurrentLastAttempt = 0;
+                    Console.WriteLine("Group Added " + CurrentOrder.Value + " after " + CurrentLastAttempt + " attempts");
+                    CurrentLastAttempt = 1;
                 }
 
                 CurrentLastAttempt++;
@@ -151,6 +125,10 @@ namespace SudokuWebMVC.Helpers
             return FinalMatrix;
         }
 
+        /// <summary>
+        /// Loads a valid board from file
+        /// </summary>
+        /// <returns></returns>
         public int[,] LoadFromFile()
         {
             string Path = @"C:/sudoku/";
@@ -160,6 +138,11 @@ namespace SudokuWebMVC.Helpers
             return new SudokuValidator().ConvertFileToMatrix(File.ReadAllLines(Files[Random]));
         }
 
+        /// <summary>
+        /// validate this group of data is valid according to its row and colum
+        /// </summary>
+        /// <param name="matrix"></param>
+        /// <returns></returns>
         public bool ValidateTemporalAdding(int[,] matrix)
         {
             var Validations = new SudokuValidations();
@@ -200,6 +183,10 @@ namespace SudokuWebMVC.Helpers
             }
         }
 
+        /// <summary>
+        /// Gets a 3x3 matrix with random data
+        /// </summary>
+        /// <returns></returns>
         private int[,] GetTentativeValues()
         {
             var TmpMatrix = new int[3, 3];
@@ -217,6 +204,10 @@ namespace SudokuWebMVC.Helpers
             return TmpMatrix;
         }
 
+        /// <summary>
+        /// Gets an integer list with 9 random rumbers.
+        /// </summary>
+        /// <returns></returns>
         private List<int> GetRandomizedIntegerList()
         {
             List<int> ints = new List<int>();
@@ -233,6 +224,10 @@ namespace SudokuWebMVC.Helpers
             return ints;
         }
 
+        /// <summary>
+        /// Given a folder with valid sudoku's files, randomizes the content of each one to create 
+        /// more valid boards. This will run forever until you stop it or blows your computer up.
+        /// </summary>
         public void RandomizeFromFolder()
         {
             string FolderPath = @"C:/sudoku/";
@@ -321,6 +316,10 @@ namespace SudokuWebMVC.Helpers
             return BoardRandomizers;
         }
 
+        /// <summary>
+        /// Saves a matrix into a new file
+        /// </summary>
+        /// <param name="matrix"></param>
         public void Save(int[,] matrix)
         {
             StringBuilder sb = new StringBuilder();
@@ -350,13 +349,13 @@ namespace SudokuWebMVC.Helpers
             switch (difficulty)
             {
                 case Difficulty.Easy:
-                    ToDelete = 24; //61 to solve
+                    ToDelete = 24; //57 remain
                     break;
                 case Difficulty.Medium:
-                    ToDelete = 47; // 34 to solve
+                    ToDelete = 44; // 37 remain
                     break;
                 case Difficulty.Hard:
-                    ToDelete = 54; //27 to solve
+                    ToDelete = 54; //27 remain
                     break;
                 default:
                     break;

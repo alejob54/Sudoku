@@ -129,20 +129,16 @@
             debugger;
             var rst = JSON.parse(data);
            
-            //$("#tblBodyccostos").html('');
             $.each(rst, function (key, value) {
 
                 value.forEach(function callback(v, index) {
-                    let name = "#".concat(key, "-", index);
-                    let val = v == 0 ? " " : v;
-                    $(name).html(val);
+                    $("#".concat(key, "-", index)).html(v == 0 ? " " : v);
                 });
             });
 
         }).fail(function (jqXHR, textStatus, error) {
             alert(error);
         }).always(function (cb) {
-            //ShowLoadingMain(false);
         });
     }
 
