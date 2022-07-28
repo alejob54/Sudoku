@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using SudokuWebMVC.Enum;
+using SudokuWebMVC.Helpers;
 using SudokuWebMVC.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace SudokuWebMVC.Controllers
 {
@@ -21,6 +24,21 @@ namespace SudokuWebMVC.Controllers
         public IActionResult Index()
         {
             return View();
+        }
+
+        //public IActionResult NewGame()
+        //{
+
+        //    return View();
+        //}
+
+        public async Task<JsonResult> NewGame()
+        {
+            var NewBoard = new SudokuGenerator().LoadFromFile();
+            NewBoard = new SudokuGenerator().PrepareBoard((Difficulty)2, NewBoard);
+            //use newtonsoft because can serialize bidimensional array
+            var jsonoutPut = JsonConvert.SerializeObject(NewBoard);
+            return Json(jsonoutPut);
         }
 
         public IActionResult Privacy()

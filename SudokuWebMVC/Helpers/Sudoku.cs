@@ -153,7 +153,7 @@ namespace SudokuWebMVC.Helpers
 
         public int[,] LoadFromFile()
         {
-            string Path = @"C:/sudokus/";
+            string Path = @"C:/sudoku/";
             var Files = Directory.GetFiles(Path);
             int Random = new Random().Next(0, Files.Count());
 
