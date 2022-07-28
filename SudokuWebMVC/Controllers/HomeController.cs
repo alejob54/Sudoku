@@ -26,19 +26,20 @@ namespace SudokuWebMVC.Controllers
             return View();
         }
 
-        //public IActionResult NewGame()
-        //{
-
-        //    return View();
-        //}
-
-        public async Task<JsonResult> NewGame()
+        public async Task<JsonResult> NewGame(int level)
         {
             var NewBoard = new SudokuGenerator().LoadFromFile();
-            NewBoard = new SudokuGenerator().PrepareBoard((Difficulty)2, NewBoard);
+            NewBoard = new SudokuGenerator().PrepareBoard((Difficulty)level, NewBoard);
             //use newtonsoft because can serialize bidimensional array
             var jsonoutPut = JsonConvert.SerializeObject(NewBoard);
             return Json(jsonoutPut);
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> ValidateBoard(string jsonMatrix)
+        {
+            var Matrix = JsonConvert.DeserializeObject<int[,]>(jsonMatrix);
+            return Json(new SudokuValidations().MatrixIsDone(Matrix));
         }
 
         public IActionResult Privacy()

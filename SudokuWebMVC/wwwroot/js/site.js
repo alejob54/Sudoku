@@ -11,5 +11,8 @@
 
 
 OnEvent(document).on('click', 'td', function (e) {
-    alert(e.target.id);
+    var input = prompt('Add a number');
+    if (!isNaN(input)) {
+        $("#".concat(e.target.id)).html(input);
+    }
 });
