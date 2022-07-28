@@ -15,8 +15,10 @@ These methods show that the ordering indeed impacts the time it takes to generat
 ## How to use
 
 ### 1. Create valid boards
-There are two projects. Run **SudokuTester** to generate initial valid boards.
+There are two projects. 
+Run **SudokuTester** to generate initial valid boards.
 Select option 1: **Generate sudokus**
+
 Then select any ordering method from 1 to 4, being the **number 3** the recommended.
 This process will create a folder in the disk C automatically. The full path will be **C:/Sudoku/**
 The system will start generating files with random Guid names in txt format. This will take several minutes to make some files, if you want to speed the process there is a folder **/Content/Sudoku** with 100 pre-generated files by me on the project **SudokuWebMVC**
