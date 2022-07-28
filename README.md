@@ -1,1 +1,3 @@
 # Sudoku
+
+example
