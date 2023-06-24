@@ -56,6 +56,7 @@ namespace SudokuTester
 
             SudokuValidator sudokuValidator = new SudokuValidator();
             sudokuValidator.ValidateFolder(@"C:/sudoku/", input == 2);
+           
         }
 
         static void GetNewBoard()
