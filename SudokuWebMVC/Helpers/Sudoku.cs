@@ -131,11 +131,21 @@ namespace SudokuWebMVC.Helpers
         /// <returns></returns>
         public int[,] LoadFromFile()
         {
-            string Path = @"C:/sudoku/";
-            var Files = Directory.GetFiles(Path);
-            int Random = new Random().Next(0, Files.Count());
+            string Path = @"/PathToFolder/";
 
-            return new SudokuValidator().ConvertFileToMatrix(File.ReadAllLines(Files[Random]));
+            try
+            {
+
+                var Files = Directory.GetFiles(Path);
+                int Random = new Random().Next(0, Files.Count());
+                return new SudokuValidator().ConvertFileToMatrix(File.ReadAllLines(Files[Random]));
+
+            }
+            catch (Exception ex)
+            {
+                var det = ex.Message;
+                throw new Exception();
+            }
         }
 
         /// <summary>
@@ -230,7 +240,7 @@ namespace SudokuWebMVC.Helpers
         /// </summary>
         public void RandomizeFromFolder()
         {
-            string FolderPath = @"C:/sudoku/";
+            string FolderPath = @"sudoku/";
             Console.ForegroundColor = ConsoleColor.Green;
 
             while (true)
@@ -331,11 +341,11 @@ namespace SudokuWebMVC.Helpers
                 }
                 sb.AppendLine();
             }
-            if (!Directory.Exists(@"C:/sudoku/"))
+            if (!Directory.Exists("sudoku/"))
             {
-                Directory.CreateDirectory(@"C:/sudoku/");
+                Directory.CreateDirectory("sudoku/");
             }
-            File.WriteAllText(@"C:/sudoku/" + Guid.NewGuid() + ".txt", sb.ToString());
+            File.WriteAllText(@"sudoku/" + Guid.NewGuid() + ".txt", sb.ToString());
         }
 
         /// <summary>

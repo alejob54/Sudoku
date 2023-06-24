@@ -9,6 +9,7 @@ namespace SudokuTester
         static void Main(string[] args)
         {
             Console.ForegroundColor = ConsoleColor.White;
+            Console.BackgroundColor = ConsoleColor.Black;
             Console.WriteLine("*************************************************************************");
             Console.WriteLine("***************************** SUDOKU TESTER *****************************");
             Console.WriteLine("*************************************************************************");
@@ -55,7 +56,7 @@ namespace SudokuTester
             int input = int.Parse(Console.ReadLine());
 
             SudokuValidator sudokuValidator = new SudokuValidator();
-            sudokuValidator.ValidateFolder(@"C:/sudoku/", input == 2);
+            sudokuValidator.ValidateFolder("sudoku/", input == 2);
            
         }
 
