@@ -267,7 +267,6 @@ namespace SudokuWebMVC.Helpers
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="ReplaceNumbersToLetters">True when replacing numbers to letters. False when opposite</param>
         /// <returns>Matrix with values replaced</returns>
         private int[,] ReplaceMatrix(int[,] inputMatrix)
         {
@@ -589,6 +588,11 @@ namespace SudokuWebMVC.Helpers
         public void ValidateFolder(string path, bool deleteInvalidFiles = false)
         {
             var files = Directory.GetFiles(path);
+            if (files.Count() == 0)
+            {
+                Console.WriteLine($"No Files found for given path: {path}");
+                return;
+            }
             int i = 1;
             foreach (var item in files)
             {

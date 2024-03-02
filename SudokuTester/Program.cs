@@ -54,9 +54,11 @@ namespace SudokuTester
             Console.WriteLine("1. Validate");
             Console.WriteLine("2. Validate and delete invalid files");
             int input = int.Parse(Console.ReadLine());
+            Console.WriteLine("Path to folder: ");
+            string path = Console.ReadLine();
 
             SudokuValidator sudokuValidator = new SudokuValidator();
-            sudokuValidator.ValidateFolder("sudoku/", input == 2);
+            sudokuValidator.ValidateFolder(path, input == 2);
            
         }
 
