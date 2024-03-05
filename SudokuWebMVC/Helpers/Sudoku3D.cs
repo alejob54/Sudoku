@@ -17,24 +17,30 @@ namespace SudokuWebMVC.Helpers
             // We assume that the cube is formed from front to back, and that it is ordered,
             // so that element 0 in the list is the front face (blue),
             // and element 8 is the rearmost face of the cube (green)
+            // so boards will be the same that cubeFacignBlue
 
             //1. Validate all 9 boards completely facing front (Blue face towards green face)
             if(!ValidateBoard(boards)) return false;
 
             //2. Get Cube (Red face towars Orange face) and validate (left to right)
-            if (!ValidateBoard(ReturnFacingRed(boards))) return false;
+            var cubeFacingRed = ReturnFacingRed(boards);
+            if (!ValidateBoard(cubeFacingRed)) return false;
 
             //3. Get Cube (Yellow face towars white face) and validate (bottom to top)
-            if (!ValidateBoard(ReturnFacingYellow(boards))) return false;
+            var cubeFacingYellow = ReturnFacingYellow(boards);
+            if (!ValidateBoard(cubeFacingYellow)) return false;
 
             //4. Validate from the blue side to the green side (Z-index)
+            if (!ValidateLineFromCubeFrontToBack(boards)) return false;
 
             //5. Validate from the red side to the orange (X-Index)
+            if (!ValidateLineFromCubeFrontToBack(cubeFacingRed)) return false;
 
             //6. Validate from the yellow side to the white (Y-index)
+            if (!ValidateLineFromCubeFrontToBack(cubeFacingYellow)) return false;
 
             //7. Validate each inner cube (27)
-
+            //Return inner matrix (?)
             return true;
         }
 
@@ -100,6 +106,26 @@ namespace SudokuWebMVC.Helpers
             }
 
             return rotatedBoards;
+        }
+
+        private bool ValidateLineFromCubeFrontToBack(List<int[,]> cube)
+        {
+            //get an array facing front to back
+            for (int z = 0; z < 9; z++)
+            {
+                for (int y = 0; y < 9; y++)
+                {
+                    int[] array = new int[9];
+                    for (int x = 0; x < 9; x++)
+                    {
+                        array[x] = cube[x][z,y];
+                    }
+
+                    if (!new SudokuValidations().ValidateRowOrColumn(array)) return false;
+                }
+            }
+
+            return true;
         }
     }
 }
