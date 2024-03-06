@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Routing;
 using SudokuWebMVC.Helpers;
 
 namespace SudokuUnitTest
@@ -30,6 +31,36 @@ namespace SudokuUnitTest
 
             //Assert
             Assert.False(result);
+        }
+
+        [Fact]
+        public void Validate3x3Cube_NoRepeatedNumbersOnEachLayer_ReturnsTrue()
+        {
+            // Arrange
+            int[,,] validCube = new int[3, 3, 3]
+            {
+            {
+                {1, 2, 3},
+                {4, 5, 6},
+                {7, 8, 9}
+            },
+            {
+                {4, 5, 6},
+                {7, 8, 9},
+                {1, 2, 3}
+            },
+            {
+                {7, 8, 9},
+                {1, 2, 3},
+                {4, 5, 6}
+            }
+            };
+
+            // Act
+            bool isValid = new Sudoku3D().Validate3x3Cube(validCube);
+
+            // Assert
+            Assert.True(isValid, "Expected the cube to be valid with no repeated numbers on each layer.");
         }
     }
 

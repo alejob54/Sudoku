@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 
 namespace SudokuWebMVC.Helpers
 {
@@ -187,6 +186,56 @@ namespace SudokuWebMVC.Helpers
                 if (z_3_list.Where(x => x.Equals(i)).Any())
                 {
                     Z_Add = Z_Add + 3;
+                }
+            }
+
+            return true;
+        }
+
+        public void Create3DCube()
+        {
+            
+        }
+
+        //private int[,] Get3x3Cube()
+        //{
+        //    int[,,] cube = new int[3, 3, 3];
+        //    w
+        //}
+
+        public bool Validate3x3Cube(int[,,] cube)
+        {
+            //1. No repeated numbers on each layer            
+            for (int z = 0; z < 3; z++)
+            {
+                List<int> Uniquelist = new List<int>();
+                for (int y = 0; y < 3; y++)
+                {
+                    for (int x = 0; x < 3; x++)
+                    {
+                        if (Uniquelist.Exists(a => a.Equals(cube[x, y, z])))
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            Uniquelist.Add(cube[x, y, z]);
+                        }
+                    }
+                }
+            }
+
+            //2. No repeated numbers on each layer
+
+            for (int y = 0; y < 3; y++)
+            {
+                for (int x = 0; x < 3; x++)
+                {
+                    if (cube[y, x, 0] == cube[y, x, 1] || cube[y, x, 0] == cube[y, x, 2])
+                    {
+                        return false;
+                    }
+
                 }
             }
 

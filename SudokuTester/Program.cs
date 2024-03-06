@@ -14,9 +14,10 @@ namespace SudokuTester
             Console.WriteLine("***************************** SUDOKU TESTER *****************************");
             Console.WriteLine("*************************************************************************");
 
-            Console.WriteLine("1. Generate Sudokus");
-            Console.WriteLine("2. Validate Folder");
-            Console.WriteLine("3. Get new board");
+            Console.WriteLine("1. Generate Sudokus 2D");
+            Console.WriteLine("2. Validate Folder 2D");
+            Console.WriteLine("3. Get new board 2D");
+            Console.WriteLine("4. Create new board 3D");
             int input = int.Parse(Console.ReadLine());
             switch (input)
             {
@@ -28,6 +29,9 @@ namespace SudokuTester
                     break;
                 case 3:
                     GetNewBoard();
+                    break;
+                case 4:
+                    TestGenerateRandomSudoku3D();
                     break;
             }
 
@@ -76,6 +80,17 @@ namespace SudokuTester
             Console.WriteLine("---------");
             new Sudoku().PrintMatrix(NewBoard);
             Console.WriteLine("---------");
+        }
+
+        static void TestGenerateRandomSudoku3D()
+        {
+            //It'll run until you close the program
+            Sudoku sudoku = new Sudoku();
+            Console.WriteLine("Select method: ");
+            Console.WriteLine("1.By adding inner cubes (27)");
+            
+            Sudoku3D sudoku3D = new Sudoku3D();
+            sudoku3D.Create3DCube();
         }
     }
 }
