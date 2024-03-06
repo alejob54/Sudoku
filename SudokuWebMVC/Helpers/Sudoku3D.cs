@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 
 namespace SudokuWebMVC.Helpers
 {
@@ -9,7 +11,7 @@ namespace SudokuWebMVC.Helpers
         /// </summary>
         /// <param name="board">List of boards represented by a bidimentional array. In order from the front to the back./param>
         /// <returns></returns>
-        public bool ValidateEntireCube(List<int[,]> boards)
+        public bool ValidateEntireCube(List<int[,]> cube)
         {
             // To be easier to understand, we are going to compare this cube with a rubiks cube
             // by only following the rubiks color convention.
@@ -20,18 +22,18 @@ namespace SudokuWebMVC.Helpers
             // so boards will be the same that cubeFacignBlue
 
             //1. Validate all 9 boards completely facing front (Blue face towards green face)
-            if(!ValidateBoard(boards)) return false;
+            if(!ValidateBoard(cube)) return false;
 
             //2. Get Cube (Red face towars Orange face) and validate (left to right)
-            var cubeFacingRed = ReturnFacingRed(boards);
+            var cubeFacingRed = ReturnFacingRed(cube);
             if (!ValidateBoard(cubeFacingRed)) return false;
 
             //3. Get Cube (Yellow face towars white face) and validate (bottom to top)
-            var cubeFacingYellow = ReturnFacingYellow(boards);
+            var cubeFacingYellow = ReturnFacingYellow(cube);
             if (!ValidateBoard(cubeFacingYellow)) return false;
 
             //4. Validate from the blue side to the green side (Z-index)
-            if (!ValidateLineFromCubeFrontToBack(boards)) return false;
+            if (!ValidateLineFromCubeFrontToBack(cube)) return false;
 
             //5. Validate from the red side to the orange (X-Index)
             if (!ValidateLineFromCubeFrontToBack(cubeFacingRed)) return false;
@@ -40,18 +42,19 @@ namespace SudokuWebMVC.Helpers
             if (!ValidateLineFromCubeFrontToBack(cubeFacingYellow)) return false;
 
             //7. Validate each inner cube (27)
-            //Return inner matrix (?)
+            if(!ValidateInnerCubes(cube)) return false;
+            
             return true;
         }
 
         /// <summary>
         /// Given a cube, validate all its layers
         /// </summary>
-        /// <param name="boards"></param>
-        private bool ValidateBoard(List<int[,]> boards)
+        /// <param name="cube"></param>
+        private bool ValidateBoard(List<int[,]> cube)
         {
             SudokuValidations validator = new SudokuValidations();
-            foreach (var board in boards)
+            foreach (var board in cube)
             {
                 if (!validator.MatrixIsDone(board))
                 {
@@ -62,7 +65,7 @@ namespace SudokuWebMVC.Helpers
             return true;
         }
 
-        private List<int[,]> ReturnFacingRed(List<int[,]> boards)
+        private List<int[,]> ReturnFacingRed(List<int[,]> cube)
         {
             List<int[,]> rotatedBoards = new List<int[,]>();
 
@@ -76,7 +79,7 @@ namespace SudokuWebMVC.Helpers
                     // This loop handles the X-index (from left to right)
                     for (int x = 0; x < 9; x++)
                     {
-                        matrix[y, x] = boards[8 - x][z, y];
+                        matrix[y, x] = cube[8 - x][z, y];
                     }
                 }
                 rotatedBoards.Add(matrix);
@@ -85,7 +88,7 @@ namespace SudokuWebMVC.Helpers
             return rotatedBoards;
         }
 
-        private List<int[,]> ReturnFacingYellow(List<int[,]> boards)
+        private List<int[,]> ReturnFacingYellow(List<int[,]> cube)
         {
             List<int[,]> rotatedBoards = new List<int[,]>();
 
@@ -99,7 +102,7 @@ namespace SudokuWebMVC.Helpers
                     // This loop handles the X-index (from left to right)
                     for (int x = 0; x < 9; x++)
                     {
-                        matrix[y, x] = boards[8 - x][8 - z, 8 - y];
+                        matrix[y, x] = cube[8 - x][8 - z, 8 - y];
                     }
                 }
                 rotatedBoards.Add(matrix);
@@ -122,6 +125,68 @@ namespace SudokuWebMVC.Helpers
                     }
 
                     if (!new SudokuValidations().ValidateRowOrColumn(array)) return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool ValidateInnerCubes(List<int[,]> cube)
+        {
+            //variables used to increment the X-Y-Z Axis value, generally by 3, or set to 0 to move the index in order to get the next inner cube
+            int X_Add = 0;
+            int Y_Add = 0;
+            int Z_Add = 0;
+
+            //Array to handle the increment or reset the previous declared variables.
+            int[] x_3_list = new int[18] { 1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26 };
+            int[] y_3_list = new int[6] { 3, 6, 12, 15, 21, 24 };
+            int[] z_3_list = new int[2] { 9, 18 };
+            int[] x_0_list = new int[9] { 3, 6, 9, 12, 15, 18, 21, 24, 27 };
+            int[] y_0_list = new int[3] { 9, 18, 27 };
+
+            //We need to get 27 cubes
+            for (int i = 1; i <= 27; i++)
+            {
+                //List to store all the cube in a linear way.
+                List<int> innerCube = new List<int>();
+                for (int z = 0; z < 3; z++)
+                {
+                    for (int y = 0; y < 3; y++)
+                    {
+                        for (int x = 0; x < 3; x++)
+                        {
+                            innerCube.Add(cube[z + Z_Add][y + Y_Add, x + X_Add]);
+                        }
+                    }
+                }
+
+                //validate the sum of the entire cube
+                if (!innerCube.Sum().Equals(135)) { return false; }
+                
+                //validate all numbers repeat only 3 times.
+                if (!innerCube.GroupBy(x => x).All(g => g.Count() == 3 && g.Key >= 1 && g.Key <= 9)) { return false; }
+
+                //manipulate X-Y-Z index according to the number of the inner cube
+                if (x_3_list.Where(x => x.Equals(i)).Any())
+                {
+                    X_Add = X_Add + 3;
+                }
+                if (x_0_list.Where(x => x.Equals(i)).Any())
+                {
+                    X_Add = 0;
+                }
+                if (y_3_list.Where(x => x.Equals(i)).Any())
+                {
+                    Y_Add = Y_Add + 3;
+                }
+                if (y_0_list.Where(x => x.Equals(i)).Any())
+                {
+                    Y_Add = 0;
+                }
+                if (z_3_list.Where(x => x.Equals(i)).Any())
+                {
+                    Z_Add = Z_Add + 3;
                 }
             }
 
