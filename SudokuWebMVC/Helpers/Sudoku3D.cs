@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace SudokuWebMVC.Helpers
@@ -197,11 +199,13 @@ namespace SudokuWebMVC.Helpers
             
         }
 
-        //private int[,] Get3x3Cube()
-        //{
-        //    int[,,] cube = new int[3, 3, 3];
-        //    w
-        //}
+        public int[,] Get3x3Cube()
+        {
+            int[,,] cube = new int[3, 3, 3];
+
+            return default;
+
+        }
 
         public bool Validate3x3Cube(int[,,] cube)
         {
@@ -213,13 +217,13 @@ namespace SudokuWebMVC.Helpers
                 {
                     for (int x = 0; x < 3; x++)
                     {
-                        if (Uniquelist.Exists(a => a.Equals(cube[x, y, z])))
+                        if (Uniquelist.Exists(a => a.Equals(cube[z, y, x])))
                         {
                             return false;
                         }
                         else
                         {
-                            Uniquelist.Add(cube[x, y, z]);
+                            Uniquelist.Add(cube[z, y, x]);
                         }
                     }
                 }
@@ -235,11 +239,44 @@ namespace SudokuWebMVC.Helpers
                     {
                         return false;
                     }
-
                 }
             }
 
             return true;
+        }
+
+        private void writeFile(int[,,] array)
+        {
+            // Set a variable to the Documents path.
+            string docPath =
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            docPath = Path.Combine(docPath, "sudoku3d");
+
+            if(!Directory.Exists(docPath))
+            {
+                Directory.CreateDirectory(docPath);
+            }
+
+            string fileName = Guid.NewGuid().ToString();
+            using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, $"{fileName}.txt")))
+            {
+                int dim1 = array.GetLength(0);
+                int dim2 = array.GetLength(1);
+                int dim3 = array.GetLength(2);
+
+                for (int i = 0; i < dim1; i++)
+                {
+                    for (int j = 0; j < dim2; j++)
+                    {
+                        for (int k = 0; k < dim3; k++)
+                        {
+                            outputFile.Write(array[i, j, k] + " ");
+                        }
+                        outputFile.WriteLine(); // Newline after each 2nd dimension
+                    }
+                    outputFile.WriteLine(); // Empty line after each 1st dimension
+                }
+            }
         }
     }
 }

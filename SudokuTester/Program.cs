@@ -35,7 +35,7 @@ namespace SudokuTester
                     break;
             }
 
-            Console.ReadKey();
+            Console.Read();
         }
 
         static void TestGenerateRandomSudoku()

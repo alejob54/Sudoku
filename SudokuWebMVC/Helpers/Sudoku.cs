@@ -245,8 +245,12 @@ namespace SudokuWebMVC.Helpers
 
             while (true)
             {
+                GC.Collect();
                 foreach (string item in Directory.GetFiles(FolderPath))
                 {
+
+                    var extension = new FileInfo(item).Extension; 
+                    if(extension != ".txt") continue;
                     //get current board
                     var Matrix = new SudokuValidator().ConvertFileToMatrix(File.ReadAllLines(item));
                     //validate first this is a valid board
@@ -596,6 +600,8 @@ namespace SudokuWebMVC.Helpers
             int i = 1;
             foreach (var item in files)
             {
+                var extension = new FileInfo(item).Extension; 
+                if(extension != ".txt") continue;
                 int[,] Matrix = ConvertFileToMatrix(File.ReadAllLines(item));
                 bool IsValid = new SudokuValidations().MatrixIsDone(Matrix);
                 if (IsValid)
