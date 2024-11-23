@@ -11,8 +11,6 @@ namespace SudokuTester
     {
         static async Task Main(string[] args)
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.BackgroundColor = ConsoleColor.Black;
             Console.WriteLine("*************************************************************************");
             Console.WriteLine("***************************** SUDOKU TESTER *****************************");
             Console.WriteLine("*************************************************************************");
@@ -25,23 +23,23 @@ namespace SudokuTester
             switch (input)
             {
                 case 1:
-                    TestGenerateRandomSudoku();
+                    await TestGenerateRandomSudokuAsync().ConfigureAwait(false);
                     break;
                 case 2:
-                    ValidateFolder();
+                    await ValidateFolderAsync().ConfigureAwait(false);
                     break;
                 case 3:
-                    GetNewBoard();
+                    await GetNewBoardAsync().ConfigureAwait(false);
                     break;
                 case 4:
-                    TestGenerateRandomSudoku3D();
+                    await TestGenerateRandomSudoku3D().ConfigureAwait(false);
                     break;
             }
 
             Console.Read();
         }
 
-        static async Task TestGenerateRandomSudoku()
+        static async Task TestGenerateRandomSudokuAsync()
         {
             //It'll run until you close the program
             Sudoku sudoku = new Sudoku();
@@ -53,10 +51,10 @@ namespace SudokuTester
             Console.WriteLine("5. *** Randomize from existing folder ***");
 
             int Method = int.Parse(Console.ReadLine());
-            sudoku.GenerateRandom(Method);
+            await sudoku.GenerateRandomAsync(Method).ConfigureAwait(false);
         }
 
-        static async Task ValidateFolder()
+        static async Task ValidateFolderAsync()
         {
             Console.WriteLine("1. Validate");
             Console.WriteLine("2. Validate and delete invalid files");
@@ -65,35 +63,35 @@ namespace SudokuTester
             string path = Console.ReadLine();
 
             SudokuValidator sudokuValidator = new SudokuValidator();
-            sudokuValidator.ValidateFolder(path, input == 2);
-
+            await sudokuValidator.ValidateFolderAsync(path, input == 2).ConfigureAwait(false);
         }
 
-        static async Task GetNewBoard()
+        static async Task GetNewBoardAsync()
         {
-            Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("Choose Difficulty:");
             Console.WriteLine("1. Easy");
             Console.WriteLine("2. Medium");
             Console.WriteLine("3. Hard");
-            Console.ForegroundColor = ConsoleColor.White;
             int Dif = int.Parse(Console.ReadLine());
-            var NewBoard = await new SudokuGenerator().LoadFromFile().ConfigureAwait(false);
-            NewBoard = await new SudokuGenerator().PrepareBoard((Difficulty)Dif, NewBoard).ConfigureAwait(false);
+            var NewBoard = await new SudokuGenerator().LoadFromFileAsync().ConfigureAwait(false);
+            NewBoard = await new SudokuGenerator().PrepareBoardAsync((Difficulty)Dif, NewBoard).ConfigureAwait(false);
             Console.WriteLine("---------");
-            new Sudoku().PrintMatrix(NewBoard);
+            await new Sudoku().PrintMatrixAsync(NewBoard).ConfigureAwait(false);
             Console.WriteLine("---------");
         }
 
         static async Task TestGenerateRandomSudoku3D()
         {
-            //It'll run until you close the program
-            Sudoku sudoku = new Sudoku();
-            Console.WriteLine("Select method: ");
-            Console.WriteLine("1.By adding inner cubes (27)");
+            await Task.Run(() =>
+            {
+                //It'll run until you close the program
+                Sudoku sudoku = new Sudoku();
+                Console.WriteLine("Select method: ");
+                Console.WriteLine("1.By adding inner cubes (27)");
 
-            Sudoku3D sudoku3D = new Sudoku3D();
-            sudoku3D.Create3DCube();
+                Sudoku3D sudoku3D = new Sudoku3D();
+                sudoku3D.Create3DCube();
+            }).ConfigureAwait(false);
         }
     }
 }

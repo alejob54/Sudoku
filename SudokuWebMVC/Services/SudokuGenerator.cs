@@ -16,9 +16,9 @@ public class SudokuGenerator
         public int Number { get; set; }
         public int ReplacedNumber { get; set; }
     }
-    public async Task<int[,]> LoadRandom(int Method)
+    public async Task<int[,]> LoadRandomAsync(int Method)
     {
-        var FinalMatrix = new int[9, 9];
+        var finalMatrix = new int[9, 9];
         List<SudokuOrderForAdding> sudokuOrderForAdding = new List<SudokuOrderForAdding>();
         switch (Method)
         {
@@ -37,37 +37,35 @@ public class SudokuGenerator
             default:
                 return default;
         }
-        int MaxAttempts = (9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 * 1);
-        int CurrentLastAttempt = 1;
-        while (!await new SudokuValidations().MatrixIsDoneAsync(FinalMatrix))
+        int maxAttempts = (9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 * 1);
+        int currentLastAttempt = 1;
+        while (!await new SudokuValidations().MatrixIsDoneAsync(finalMatrix))
         {
-            if (CurrentLastAttempt > MaxAttempts)
+            if (currentLastAttempt > maxAttempts)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("Reaching limit of combinations --- > Skipping");
-                Console.ForegroundColor = ConsoleColor.White;
                 break;
             }
             var CurrentOrder = sudokuOrderForAdding.Where(a => !a.Done).Take(1).First();
             var TemporalMatrix = await GetTentativeValuesAsync().ConfigureAwait(false);
-            var FinalMatrixCopy = FinalMatrix;
+            var FinalMatrixCopy = finalMatrix;
 
-            await AddToMatrixAsync(ref FinalMatrixCopy, TemporalMatrix, CurrentOrder);
+            FinalMatrixCopy = await AddToMatrixAsync(FinalMatrixCopy, TemporalMatrix, CurrentOrder);
 
             //Validate. 
             if (await ValidateTemporalAddingAsync(FinalMatrixCopy).ConfigureAwait(false))
             {
-                FinalMatrix = FinalMatrixCopy;
+                finalMatrix = FinalMatrixCopy;
                 //this group has passed the validations.
                 sudokuOrderForAdding[CurrentOrder.Order - 1].Done = true;
-                Console.WriteLine("Group Added " + CurrentOrder.Value + " after " + CurrentLastAttempt + " attempts");
-                CurrentLastAttempt = 1;
+                Console.WriteLine("Group Added " + CurrentOrder.Value + " after " + currentLastAttempt + " attempts");
+                currentLastAttempt = 1;
             }
 
-            CurrentLastAttempt++;
+            currentLastAttempt++;
         }
 
-        return FinalMatrix;
+        return finalMatrix;
     }
 
     /// <summary>
@@ -191,7 +189,6 @@ public class SudokuGenerator
     public async Task RandomizeFromFolderAsync()
     {
         string FolderPath = @"sudoku/";
-        Console.ForegroundColor = ConsoleColor.Green;
 
         while (true)
         {

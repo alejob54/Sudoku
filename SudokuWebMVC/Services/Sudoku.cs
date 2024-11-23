@@ -1,19 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using SudokuWebMVC.Enum;
 using System.Threading.Tasks;
 using SudokuWebMVC.Validations;
-using SudokuWebMVC.Models;
 
 namespace SudokuWebMVC.Services
 {
     public class Sudoku
     {
 
-        public async Task GenerateRandom(int Method)
+        public async Task GenerateRandomAsync(int Method)
         {
             int[,] matrix = new int[9, 9];
             bool isValid = false;
@@ -28,7 +22,7 @@ namespace SudokuWebMVC.Services
             {
                 while (true)
                 {
-                    matrix = await new SudokuGenerator().LoadRandom(Method).ConfigureAwait(false);
+                    matrix = await new SudokuGenerator().LoadRandomAsync(Method).ConfigureAwait(false);
 
                     isValid = await new SudokuValidations().MatrixIsDoneAsync(matrix).ConfigureAwait(false);
 
@@ -36,7 +30,7 @@ namespace SudokuWebMVC.Services
                     {
                         var end = DateTime.UtcNow;
                         Console.WriteLine($"Found in {end.Subtract(start).TotalMinutes} minutes");
-                        await PrintMatrix(matrix).ConfigureAwait(false);
+                        await PrintMatrixAsync(matrix).ConfigureAwait(false);
                         await new SudokuGenerator().SaveAsync(matrix).ConfigureAwait(false);
                         start = DateTime.UtcNow;
                     }
@@ -44,7 +38,7 @@ namespace SudokuWebMVC.Services
             }
         }
 
-        public async Task PrintMatrix(int[,] matrix)
+        public async Task PrintMatrixAsync(int[,] matrix)
         {
             await Task.Run(() =>
             {
