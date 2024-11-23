@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Routing;
 using SudokuWebMVC.Helpers;
 
 namespace SudokuUnitTest
@@ -69,7 +68,7 @@ namespace SudokuUnitTest
         public static TheoryData<List<int[,]>> GetValidTestData()
         {
             var boards = new TheoryData<List<int[,]>>();
-            
+
             List<int[,]> mylist = new List<int[,]>
             {
                 // Add your test data here
@@ -156,7 +155,7 @@ namespace SudokuUnitTest
                     {3, 9, 2, 1, 4, 5, 8, 7, 6},
                     {4, 1, 5, 8, 6, 7, 2, 3, 9},
                     {7, 6, 8, 3, 2, 9, 5, 4, 1}
-                },                
+                },
                 new int[,]
                 {
                     {7, 6, 3, 1, 2, 9, 5, 4, 8},
@@ -168,7 +167,7 @@ namespace SudokuUnitTest
                     {8, 7, 6, 9, 3, 2, 1, 5, 4},
                     {2, 3, 9, 5, 1, 4, 6, 8, 7},
                     {5, 4, 1, 7, 8, 6, 9, 2, 3}
-                },                
+                },
                 new int[,]
                 {
                     {5, 4, 8, 7, 3, 6, 9, 2, 1},

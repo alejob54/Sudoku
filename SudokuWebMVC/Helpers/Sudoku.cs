@@ -10,7 +10,7 @@ namespace SudokuWebMVC.Helpers
     public class Sudoku
     {
 
-        public void GenerateRandom(int Method)
+        public void GenerateRandom(int Method, int threadId)
         {
             int[,] matrix = new int[9, 9];
             bool isValid = false;
@@ -34,7 +34,7 @@ namespace SudokuWebMVC.Helpers
                     {
                         var end = DateTime.UtcNow;
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine($"Found in {(end.Subtract(start).TotalMinutes)} minutes");
+                        Console.WriteLine($"{threadId}: Found in {(end.Subtract(start).TotalMinutes)} minutes");
                         PrintMatrix(matrix);
                         Console.ForegroundColor = ConsoleColor.White;
                         new SudokuGenerator().Save(matrix);
@@ -249,8 +249,8 @@ namespace SudokuWebMVC.Helpers
                 foreach (string item in Directory.GetFiles(FolderPath))
                 {
 
-                    var extension = new FileInfo(item).Extension; 
-                    if(extension != ".txt") continue;
+                    var extension = new FileInfo(item).Extension;
+                    if (extension != ".txt") continue;
                     //get current board
                     var Matrix = new SudokuValidator().ConvertFileToMatrix(File.ReadAllLines(item));
                     //validate first this is a valid board
@@ -553,7 +553,7 @@ namespace SudokuWebMVC.Helpers
         {
             var SudokuOrderForRemoving = new SudokuOrderForAdding().GetSudokuOrderForAdding_OrderedMethod();
             var Coordinates = SudokuOrderForRemoving.Where(a => a.Value.Equals(quadrant)).First();
-            
+
             //The following +1 is necessary to include the highest coordinate value.
             int RandomX = new Random().Next(Coordinates.XCoordinate, (Coordinates.XCoordinate + 2) + 1);
             int RandomY = new Random().Next(Coordinates.YCoordinate, (Coordinates.YCoordinate + 2) + 1);
@@ -600,8 +600,8 @@ namespace SudokuWebMVC.Helpers
             int i = 1;
             foreach (var item in files)
             {
-                var extension = new FileInfo(item).Extension; 
-                if(extension != ".txt") continue;
+                var extension = new FileInfo(item).Extension;
+                if (extension != ".txt") continue;
                 int[,] Matrix = ConvertFileToMatrix(File.ReadAllLines(item));
                 bool IsValid = new SudokuValidations().MatrixIsDone(Matrix);
                 if (IsValid)

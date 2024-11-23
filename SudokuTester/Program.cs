@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using SudokuWebMVC.Enum;
 using SudokuWebMVC.Helpers;
 
@@ -38,7 +40,7 @@ namespace SudokuTester
             Console.Read();
         }
 
-        static void TestGenerateRandomSudoku()
+        static async void TestGenerateRandomSudoku()
         {
             //It'll run until you close the program
             Sudoku sudoku = new Sudoku();
@@ -50,7 +52,16 @@ namespace SudokuTester
             Console.WriteLine("5. *** Randomize from existing folder ***");
 
             int Method = int.Parse(Console.ReadLine());
-            sudoku.GenerateRandom(Method);
+
+            List<Task> tasks = new List<Task>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                int taskNumber = i; // Necesario para evitar el problema de capturar la variable en el bucle.
+                tasks.Add(Task.Run(() => sudoku.GenerateRandom(Method, i)));
+            }
+
+            await Task.WhenAll(tasks);
         }
 
         static void ValidateFolder()
@@ -63,7 +74,7 @@ namespace SudokuTester
 
             SudokuValidator sudokuValidator = new SudokuValidator();
             sudokuValidator.ValidateFolder(path, input == 2);
-           
+
         }
 
         static void GetNewBoard()
@@ -88,7 +99,7 @@ namespace SudokuTester
             Sudoku sudoku = new Sudoku();
             Console.WriteLine("Select method: ");
             Console.WriteLine("1.By adding inner cubes (27)");
-            
+
             Sudoku3D sudoku3D = new Sudoku3D();
             sudoku3D.Create3DCube();
         }
