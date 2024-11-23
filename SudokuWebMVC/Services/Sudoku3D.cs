@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using SudokuWebMVC.Validations;
 
 namespace SudokuWebMVC.Helpers
 {
@@ -12,7 +14,7 @@ namespace SudokuWebMVC.Helpers
         /// </summary>
         /// <param name="board">List of boards represented by a bidimentional array. In order from the front to the back./param>
         /// <returns></returns>
-        public bool ValidateEntireCube(List<int[,]> cube)
+        public async Task<bool> ValidateEntireCube(List<int[,]> cube)
         {
             // To be easier to understand, we are going to compare this cube with a rubiks cube
             // by only following the rubiks color convention.
@@ -23,28 +25,28 @@ namespace SudokuWebMVC.Helpers
             // so boards will be the same that cubeFacignBlue
 
             //1. Validate all 9 boards completely facing front (Blue face towards green face)
-            if(!ValidateBoard(cube)) return false;
+            if (!await ValidateBoard(cube)) return false;
 
             //2. Get Cube (Red face towars Orange face) and validate (left to right)
             var cubeFacingRed = ReturnFacingRed(cube);
-            if (!ValidateBoard(cubeFacingRed)) return false;
+            if (!await ValidateBoard(cubeFacingRed)) return false;
 
             //3. Get Cube (Yellow face towars white face) and validate (bottom to top)
             var cubeFacingYellow = ReturnFacingYellow(cube);
-            if (!ValidateBoard(cubeFacingYellow)) return false;
+            if (!await ValidateBoard(cubeFacingYellow)) return false;
 
             //4. Validate from the blue side to the green side (Z-index)
-            if (!ValidateLineFromCubeFrontToBack(cube)) return false;
+            if (!await ValidateLineFromCubeFrontToBack(cube)) return false;
 
             //5. Validate from the red side to the orange (X-Index)
-            if (!ValidateLineFromCubeFrontToBack(cubeFacingRed)) return false;
+            if (!await ValidateLineFromCubeFrontToBack(cubeFacingRed)) return false;
 
             //6. Validate from the yellow side to the white (Y-index)
-            if (!ValidateLineFromCubeFrontToBack(cubeFacingYellow)) return false;
+            if (!await ValidateLineFromCubeFrontToBack(cubeFacingYellow)) return false;
 
             //7. Validate each inner cube (27)
-            if(!ValidateInnerCubes(cube)) return false;
-            
+            if (!ValidateInnerCubes(cube)) return false;
+
             return true;
         }
 
@@ -52,12 +54,12 @@ namespace SudokuWebMVC.Helpers
         /// Given a cube, validate all its layers
         /// </summary>
         /// <param name="cube"></param>
-        private bool ValidateBoard(List<int[,]> cube)
+        private async Task<bool> ValidateBoard(List<int[,]> cube)
         {
             SudokuValidations validator = new SudokuValidations();
             foreach (var board in cube)
             {
-                if (!validator.MatrixIsDone(board))
+                if (!await validator.MatrixIsDoneAsync(board))
                 {
                     return false;
                 }
@@ -112,7 +114,7 @@ namespace SudokuWebMVC.Helpers
             return rotatedBoards;
         }
 
-        private bool ValidateLineFromCubeFrontToBack(List<int[,]> cube)
+        private async Task<bool> ValidateLineFromCubeFrontToBack(List<int[,]> cube)
         {
             //get an array facing front to back
             for (int z = 0; z < 9; z++)
@@ -122,10 +124,10 @@ namespace SudokuWebMVC.Helpers
                     int[] array = new int[9];
                     for (int x = 0; x < 9; x++)
                     {
-                        array[x] = cube[x][z,y];
+                        array[x] = cube[x][z, y];
                     }
 
-                    if (!new SudokuValidations().ValidateRowOrColumn(array)) return false;
+                    if (!await new SudokuValidations().ValidateRowOrColumnAsync(array)) return false;
                 }
             }
 
@@ -164,7 +166,7 @@ namespace SudokuWebMVC.Helpers
 
                 //validate the sum of the entire cube
                 if (!innerCube.Sum().Equals(135)) { return false; }
-                
+
                 //validate all numbers repeat only 3 times.
                 if (!innerCube.GroupBy(x => x).All(g => g.Count() == 3 && g.Key >= 1 && g.Key <= 9)) { return false; }
 
@@ -196,7 +198,7 @@ namespace SudokuWebMVC.Helpers
 
         public void Create3DCube()
         {
-            
+
         }
 
         public int[,] Get3x3Cube()
@@ -252,7 +254,7 @@ namespace SudokuWebMVC.Helpers
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             docPath = Path.Combine(docPath, "sudoku3d");
 
-            if(!Directory.Exists(docPath))
+            if (!Directory.Exists(docPath))
             {
                 Directory.CreateDirectory(docPath);
             }

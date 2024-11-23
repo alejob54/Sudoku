@@ -9,6 +9,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using SudokuWebMVC.Services;
+using SudokuWebMVC.Validations;
 
 namespace SudokuWebMVC.Controllers
 {
@@ -28,8 +30,8 @@ namespace SudokuWebMVC.Controllers
 
         public async Task<JsonResult> NewGame(int level)
         {
-            var NewBoard = new SudokuGenerator().LoadFromFile();
-            NewBoard = new SudokuGenerator().PrepareBoard((Difficulty)level, NewBoard);
+            var NewBoard = await new SudokuGenerator().LoadFromFileAsync().ConfigureAwait(false);
+            NewBoard = await new SudokuGenerator().PrepareBoardAsync((Difficulty)level, NewBoard).ConfigureAwait(false);
             //use newtonsoft because can serialize bidimensional array
             var jsonoutPut = JsonConvert.SerializeObject(NewBoard);
             return Json(jsonoutPut);
@@ -39,7 +41,7 @@ namespace SudokuWebMVC.Controllers
         public async Task<JsonResult> ValidateBoard(string jsonMatrix)
         {
             var Matrix = JsonConvert.DeserializeObject<int[,]>(jsonMatrix);
-            return Json(new SudokuValidations().MatrixIsDone(Matrix));
+            return Json(await new SudokuValidations().MatrixIsDoneAsync(Matrix));
         }
 
         public IActionResult Privacy()

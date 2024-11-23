@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Threading.Tasks;
 using SudokuWebMVC.Enum;
 using SudokuWebMVC.Helpers;
+using SudokuWebMVC.Services;
+using SudokuWebMVC.Validations;
 
 namespace SudokuTester
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Console.ForegroundColor = ConsoleColor.White;
             Console.BackgroundColor = ConsoleColor.Black;
@@ -38,7 +41,7 @@ namespace SudokuTester
             Console.Read();
         }
 
-        static void TestGenerateRandomSudoku()
+        static async Task TestGenerateRandomSudoku()
         {
             //It'll run until you close the program
             Sudoku sudoku = new Sudoku();
@@ -53,7 +56,7 @@ namespace SudokuTester
             sudoku.GenerateRandom(Method);
         }
 
-        static void ValidateFolder()
+        static async Task ValidateFolder()
         {
             Console.WriteLine("1. Validate");
             Console.WriteLine("2. Validate and delete invalid files");
@@ -63,10 +66,10 @@ namespace SudokuTester
 
             SudokuValidator sudokuValidator = new SudokuValidator();
             sudokuValidator.ValidateFolder(path, input == 2);
-           
+
         }
 
-        static void GetNewBoard()
+        static async Task GetNewBoard()
         {
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("Choose Difficulty:");
@@ -75,20 +78,20 @@ namespace SudokuTester
             Console.WriteLine("3. Hard");
             Console.ForegroundColor = ConsoleColor.White;
             int Dif = int.Parse(Console.ReadLine());
-            var NewBoard = new SudokuGenerator().LoadFromFile();
-            NewBoard = new SudokuGenerator().PrepareBoard((Difficulty)Dif, NewBoard);
+            var NewBoard = await new SudokuGenerator().LoadFromFile().ConfigureAwait(false);
+            NewBoard = await new SudokuGenerator().PrepareBoard((Difficulty)Dif, NewBoard).ConfigureAwait(false);
             Console.WriteLine("---------");
             new Sudoku().PrintMatrix(NewBoard);
             Console.WriteLine("---------");
         }
 
-        static void TestGenerateRandomSudoku3D()
+        static async Task TestGenerateRandomSudoku3D()
         {
             //It'll run until you close the program
             Sudoku sudoku = new Sudoku();
             Console.WriteLine("Select method: ");
             Console.WriteLine("1.By adding inner cubes (27)");
-            
+
             Sudoku3D sudoku3D = new Sudoku3D();
             sudoku3D.Create3DCube();
         }
