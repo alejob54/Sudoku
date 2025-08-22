@@ -26,7 +26,9 @@ namespace SudokuWebMVC.Controllers
             return View();
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<JsonResult> NewGame(int level)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var NewBoard = new SudokuGenerator().LoadFromFile();
             NewBoard = new SudokuGenerator().PrepareBoard((Difficulty)level, NewBoard);
@@ -36,7 +38,9 @@ namespace SudokuWebMVC.Controllers
         }
 
         [HttpPost]
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<JsonResult> ValidateBoard(string jsonMatrix)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var Matrix = JsonConvert.DeserializeObject<int[,]>(jsonMatrix);
             return Json(new SudokuValidations().MatrixIsDone(Matrix));

@@ -54,11 +54,11 @@ namespace SudokuTester
             int Method = int.Parse(Console.ReadLine());
 
             List<Task> tasks = new List<Task>();
-
-            for (int i = 0; i < 3; i++)
+            Console.WriteLine($"{Environment.ProcessorCount} processors found");
+            int threadsCount = 4;
+            for (int i = 0; i < threadsCount; i++)
             {
-                int taskNumber = i; // Necesario para evitar el problema de capturar la variable en el bucle.
-                tasks.Add(Task.Run(() => sudoku.GenerateRandom(Method, i)));
+                tasks.Add(Task.Run(() => sudoku.GenerateRandom(Method, threadsCount, default)));
             }
 
             await Task.WhenAll(tasks);

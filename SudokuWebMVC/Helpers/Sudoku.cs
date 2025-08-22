@@ -4,19 +4,22 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using SudokuWebMVC.Enum;
+using System.Threading;
 
 namespace SudokuWebMVC.Helpers
 {
     public class Sudoku
     {
 
-        public void GenerateRandom(int Method, int threadId)
+        public void GenerateRandom(int method, int threadsCount, CancellationToken token)
         {
+            var threadId = Thread.CurrentThread.ManagedThreadId;
+
             int[,] matrix = new int[9, 9];
             bool isValid = false;
             DateTime start = DateTime.UtcNow;
 
-            if (Method.Equals(5))
+            if (method.Equals(5))
             {
                 new SudokuGenerator().RandomizeFromFolder();
                 Console.ForegroundColor = ConsoleColor.Green;
@@ -24,9 +27,9 @@ namespace SudokuWebMVC.Helpers
             }
             else
             {
-                while (true)
+                while (!token.IsCancellationRequested)
                 {
-                    matrix = new SudokuGenerator().LoadRandom(Method);
+                    matrix = new SudokuGenerator().LoadRandom(method, threadId, token);
 
                     isValid = new SudokuValidations().MatrixIsDone(matrix);
 
@@ -34,10 +37,10 @@ namespace SudokuWebMVC.Helpers
                     {
                         var end = DateTime.UtcNow;
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine($"{threadId}: Found in {(end.Subtract(start).TotalMinutes)} minutes");
+                        Console.WriteLine($"T: {threadId}- Found in {(end.Subtract(start).TotalMinutes)} minutes");
                         PrintMatrix(matrix);
                         Console.ForegroundColor = ConsoleColor.White;
-                        new SudokuGenerator().Save(matrix);
+                        new SudokuGenerator().Save(matrix, method, threadsCount);
                         start = DateTime.UtcNow;
                     }
                 }
@@ -71,7 +74,7 @@ namespace SudokuWebMVC.Helpers
             public int Number { get; set; }
             public int ReplacedNumber { get; set; }
         }
-        public int[,] LoadRandom(int Method)
+        public int[,] LoadRandom(int Method, int threadId, CancellationToken token)
         {
             var FinalMatrix = new int[9, 9];
             List<SudokuOrderForAdding> sudokuOrderForAdding = new List<SudokuOrderForAdding>();
@@ -94,12 +97,12 @@ namespace SudokuWebMVC.Helpers
             }
             int MaxAttempts = (9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 * 1);
             int CurrentLastAttempt = 1;
-            while (!new SudokuValidations().MatrixIsDone(FinalMatrix))
+            while (!new SudokuValidations().MatrixIsDone(FinalMatrix) && !token.IsCancellationRequested)
             {
                 if (CurrentLastAttempt > MaxAttempts)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Reaching limit of combinations --- > Skipping");
+                    Console.WriteLine($"T:{threadId} - Reaching limit of combinations --- > Skipping");
                     Console.ForegroundColor = ConsoleColor.White;
                     break;
                 }
@@ -115,7 +118,7 @@ namespace SudokuWebMVC.Helpers
                     FinalMatrix = FinalMatrixCopy;
                     //this group has passed the validations.
                     sudokuOrderForAdding[CurrentOrder.Order - 1].Done = true;
-                    Console.WriteLine("Group Added " + CurrentOrder.Value + " after " + CurrentLastAttempt + " attempts");
+                    Console.WriteLine($"T:{threadId} - Group Added " + CurrentOrder.Value + " after " + CurrentLastAttempt + " attempts");
                     CurrentLastAttempt = 1;
                 }
 
@@ -131,7 +134,7 @@ namespace SudokuWebMVC.Helpers
         /// <returns></returns>
         public int[,] LoadFromFile()
         {
-            string Path = @"/PathToFolder/";
+            string Path = @"/Users/alejo/Code/GitHub/Sudoku/SudokuWebMVC/Content/Sudoku/";
 
             try
             {
@@ -333,7 +336,7 @@ namespace SudokuWebMVC.Helpers
         /// Saves a matrix into a new file
         /// </summary>
         /// <param name="matrix"></param>
-        public void Save(int[,] matrix)
+        public void Save(int[,] matrix, int? method = null, int? threads = null)
         {
             StringBuilder sb = new StringBuilder();
             for (int x = 0; x < matrix.GetLength(0); x++)
@@ -348,7 +351,14 @@ namespace SudokuWebMVC.Helpers
             {
                 Directory.CreateDirectory("sudoku/");
             }
-            File.WriteAllText(@"sudoku/" + Guid.NewGuid() + ".txt", sb.ToString());
+
+            string filename = @$"sudoku/{Guid.NewGuid()}.txt";
+            if (method != null && threads != null)
+            {
+                filename = @$"sudoku/{threads}_{method}_{Guid.NewGuid()}.txt";
+            }
+
+            File.WriteAllText(filename, sb.ToString());
         }
 
         /// <summary>
