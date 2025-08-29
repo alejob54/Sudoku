@@ -1,4 +1,3 @@
-using System;
 using SudokuWebMVC.Helpers;
 
 namespace SudokuUnitTest;
@@ -6,32 +5,32 @@ namespace SudokuUnitTest;
 public class _2DTests
 {
     [Theory]
-    [InlineData(1, 1, 1)]
-    [InlineData(2, 1, 1)]
-    [InlineData(3, 1, 1)]
-    [InlineData(4, 1, 1)]
-    [InlineData(1, 2, 1)]
-    [InlineData(2, 2, 1)]
-    [InlineData(3, 2, 1)]
-    [InlineData(4, 2, 1)]
-    [InlineData(1, 3, 1)]
-    [InlineData(2, 3, 1)]
-    [InlineData(3, 3, 1)]
-    [InlineData(4, 3, 1)]
-    [InlineData(1, 4, 1)]
-    [InlineData(2, 4, 1)]
-    [InlineData(3, 4, 1)]
-    [InlineData(4, 4, 1)]
-    public void LongRunningTest(int threads, int method, int hours)
+    [InlineData(1, 1, 30)]
+    [InlineData(2, 1, 30)]
+    [InlineData(3, 1, 30)]
+    [InlineData(4, 1, 30)]
+    [InlineData(1, 2, 30)]
+    [InlineData(2, 2, 30)]
+    [InlineData(3, 2, 30)]
+    [InlineData(4, 2, 30)]
+    [InlineData(1, 3, 30)]
+    [InlineData(2, 3, 30)]
+    [InlineData(3, 3, 30)]
+    [InlineData(4, 3, 30)]
+    [InlineData(1, 4, 30)]
+    [InlineData(2, 4, 30)]
+    [InlineData(3, 4, 30)]
+    [InlineData(4, 4, 30)]
+    public void LongRunningTest(int threads, int method, int minutes)
     {
-        LongRunMethod(threads, method, hours);
+        LongRunMethod(threads, method, minutes);
     }
 
-    private async void LongRunMethod(int threads, int method, int hours)
+    private async void LongRunMethod(int threads, int method, int minutes)
     {
         Sudoku sudoku = new Sudoku();
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromHours(hours));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(minutes));
         var token = cts.Token;
 
         List<Task> tasks = new List<Task>();

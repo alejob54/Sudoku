@@ -55,7 +55,7 @@ namespace SudokuTester
 
             List<Task> tasks = new List<Task>();
             Console.WriteLine($"{Environment.ProcessorCount} processors found");
-            int threadsCount = 4;
+            int threadsCount = 3;
             for (int i = 0; i < threadsCount; i++)
             {
                 tasks.Add(Task.Run(() => sudoku.GenerateRandom(Method, threadsCount, default)));
